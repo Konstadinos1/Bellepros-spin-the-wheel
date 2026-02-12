@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>La Roue de Fortune — Bellepros 440 · Laval</title>
+  <meta name="description" content="Dépense 50$+ au Bellepros 440 à Laval et tourne la Roue de Fortune pour gagner des prix! Poutine gratuite, JACKPOT 50$ et plus!" />
+  <meta property="og:title" content="La Roue de Fortune — Bellepros 440" />
+  <meta property="og:description" content="Dépense 50$+ = 1 Spin Gratuit! Tout le monde gagne!" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://belleproslaval440.com" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎰</text></svg>" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%; overflow-x: hidden;
+      font-family: Arial, 'Helvetica Neue', sans-serif;
+      background: #0a0a1a;
+    }
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ====== NAV BAR ====== */
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(10,10,26,0.95);
+      border-bottom: 2px solid rgba(255,215,0,0.15);
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #FFD700, #FF6B35);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; color: #1B1B2F; font-size: 14px;
+    }
+    .nav-logo-text { color: #FFD700; font-size: 18px; font-weight: bold; letter-spacing: 1px; }
+    .nav-logo-sub { color: rgba(255,255,255,0.4); font-size: 11px; }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a {
+      color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #FFD700; }
+    .nav-links .active { color: #FF6B35; font-weight: bold; }
+
+    /* ====== HERO ====== */
+    .hero {
+      text-align: center; padding: 30px 20px 10px;
+      background: linear-gradient(180deg, #0a0a1a, #1B1B2F);
+    }
+    .hero-badge {
+      display: inline-block; padding: 4px 16px; border-radius: 20px;
+      background: rgba(255,107,53,0.15); border: 1px solid rgba(255,107,53,0.3);
+      color: #FF6B35; font-size: 12px; font-weight: bold; letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .hero h1 {
+      font-size: 38px; color: #FFD700; letter-spacing: 4px;
+      text-shadow: 0 0 30px rgba(255,215,0,0.4);
+      margin-bottom: 8px;
+    }
+    .hero p { color: rgba(255,255,255,0.6); font-size: 16px; margin-bottom: 4px; }
+    .hero .rule {
+      display: inline-block; margin-top: 10px; padding: 8px 24px;
+      border-radius: 30px; background: rgba(230,57,70,0.15);
+      border: 1px solid rgba(230,57,70,0.3);
+      color: #E63946; font-size: 15px; font-weight: bold;
+    }
+
+    /* ====== WHEEL SECTION ====== */
+    .wheel-section {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 20px 10px;
+      background: linear-gradient(180deg, #1B1B2F, #0a0a1a 40%, #1B1B2F);
+      position: relative;
+    }
+
+    /* ====== CONFETTI ====== */
+    .confetti-layer {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 1000;
+    }
+
+    /* ====== CANVAS ====== */
+    .wheel-canvas-wrap {
+      position: relative; margin-bottom: 16px;
+    }
+
+    /* ====== SPIN BUTTON ====== */
+    .spin-btn {
+      background: linear-gradient(135deg, #E63946, #c41e3a);
+      border: none; border-radius: 50px; padding: 16px 64px;
+      cursor: pointer; margin-bottom: 16px;
+      animation: pulseGlow 1.5s infinite, pulse 2s infinite;
+      transition: transform 0.1s;
+    }
+    .spin-btn:active { transform: scale(0.96); }
+    .spin-btn span {
+      color: #fff; font-size: 28px; font-weight: bold;
+      letter-spacing: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .spinning-text {
+      color: #FFD700; font-size: 22px; font-weight: bold;
+      margin-bottom: 16px; animation: pulse 0.5s infinite;
+    }
+
+    /* ====== RESULT CARD ====== */
+    .result-card {
+      background: linear-gradient(135deg, rgba(27,27,47,0.97), rgba(10,10,26,0.97));
+      border: 2px solid #FFD700; border-radius: 20px;
+      padding: 24px 36px; text-align: center;
+      margin-bottom: 16px; animation: fadeInUp 0.5s ease-out;
+      max-width: 380px; width: 90%;
+      box-shadow: 0 0 40px rgba(255,215,0,0.15);
+    }
+    .result-emoji { font-size: 48px; margin-bottom: 8px; }
+    .result-title { color: #FFD700; font-size: 24px; font-weight: bold; margin-bottom: 6px; letter-spacing: 3px; }
+    .result-prize { color: #FF6B35; font-size: 26px; font-weight: bold; margin-bottom: 8px; }
+    .result-desc { color: #ddd; font-size: 15px; margin-bottom: 20px; }
+    .reset-btn {
+      background: linear-gradient(135deg, #FF6B35, #e55a2b);
+      border: none; border-radius: 30px; padding: 12px 40px;
+      color: #fff; font-size: 16px; font-weight: bold;
+      cursor: pointer; letter-spacing: 1px; transition: transform 0.1s;
+    }
+    .reset-btn:active { transform: scale(0.96); }
+
+    /* ====== PRIZE TABLE ====== */
+    .prize-table {
+      background: rgba(27,27,47,0.6); border: 1px solid rgba(255,215,0,0.15);
+      border-radius: 14px; padding: 14px 20px;
+      margin-bottom: 12px; max-width: 380px; width: 90%;
+    }
+    .prize-table-title {
+      color: #FFD700; font-size: 13px; font-weight: bold;
+      text-align: center; margin-bottom: 10px; letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .prize-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 5px 10px; border-radius: 6px; margin-bottom: 2px;
+    }
+    .prize-row:nth-child(odd) { background: rgba(255,255,255,0.03); }
+    .prize-name { color: #ccc; font-size: 13px; }
+    .prize-val { color: rgba(255,255,255,0.4); font-size: 12px; margin: 0 auto 0 8px; }
+    .prize-prob { color: #FF6B35; font-size: 13px; font-weight: bold; min-width: 36px; text-align: right; }
+
+    /* ====== HOW IT WORKS ====== */
+    .how-section {
+      padding: 40px 20px; text-align: center;
+      background: linear-gradient(180deg, #0a0a1a, #1B1B2F);
+    }
+    .how-section h2 { color: #FFD700; font-size: 24px; margin-bottom: 24px; letter-spacing: 2px; }
+    .how-steps { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; max-width: 700px; margin: 0 auto; }
+    .how-step {
+      width: 180px; padding: 20px 16px; border-radius: 16px;
+      background: rgba(27,27,47,0.7); border: 1px solid rgba(255,215,0,0.1);
+    }
+    .how-step-num {
+      width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 10px;
+      background: linear-gradient(135deg, #FFD700, #FF6B35);
+      display: flex; align-items: center; justify-content: center;
+      color: #1B1B2F; font-weight: bold; font-size: 16px;
+    }
+    .how-step h3 { color: #FF6B35; font-size: 15px; margin-bottom: 6px; }
+    .how-step p { color: rgba(255,255,255,0.5); font-size: 13px; line-height: 1.4; }
+
+    /* ====== FOOTER ====== */
+    .site-footer {
+      padding: 24px 20px; text-align: center;
+      background: #0a0a1a; border-top: 1px solid rgba(255,215,0,0.1);
+    }
+    .site-footer .brand { color: #FFD700; font-size: 16px; font-weight: bold; letter-spacing: 2px; margin-bottom: 6px; }
+    .site-footer .addr { color: rgba(255,255,255,0.3); font-size: 12px; margin-bottom: 4px; }
+    .site-footer .legal { color: rgba(255,255,255,0.2); font-size: 10px; margin-top: 10px; line-height: 1.5; }
+
+    /* ====== ANIMATIONS ====== */
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(230,57,70,0.5), 0 0 40px rgba(230,57,70,0.2); }
+      50% { box-shadow: 0 0 35px rgba(230,57,70,0.8), 0 0 70px rgba(230,57,70,0.4); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* ====== RESPONSIVE ====== */
+    @media (max-width: 600px) {
+      .nav-links { gap: 14px; }
+      .nav-links a { font-size: 12px; }
+      .hero h1 { font-size: 28px; letter-spacing: 2px; }
+      .how-steps { gap: 16px; }
+      .how-step { width: 150px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">BP</div>
+      <div>
+        <div class="nav-logo-text">BELLEPROS 440</div>
+        <div class="nav-logo-sub">Laval, Québec</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="#wheel" class="active">La Roue</a>
+      <a href="#how">Comment Jouer</a>
+      <a href="#prizes">Prix</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">PROMOTION EN MAGASIN</div>
+    <h1>LA ROUE DE FORTUNE</h1>
+    <p>Tout le monde gagne. Aucun perdant.</p>
+    <div class="rule">Dépense 50$+ = 1 Spin Gratuit!</div>
+  </section>
+
+  <!-- WHEEL SECTION -->
+  <section class="wheel-section" id="wheel">
+    <div class="confetti-layer" id="confettiLayer"></div>
+    <div class="wheel-canvas-wrap">
+      <canvas id="wheelCanvas" width="440" height="440" style="width:440px;height:440px;"></canvas>
+    </div>
+    <div id="controls"></div>
+    <div id="resultArea"></div>
+
+    <div class="prize-table" id="prizes">
+      <div class="prize-table-title">Tableau des Prix</div>
+      <div id="prizeRows"></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-section" id="how">
+    <h2>COMMENT JOUER?</h2>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-step-num">1</div>
+        <h3>Commande 50$+</h3>
+        <p>Fais une commande de 50$ ou plus au Bellepros 440.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">2</div>
+        <h3>Montre ton recu</h3>
+        <p>Montre ta facture au staff pour activer ton spin.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">3</div>
+        <h3>Tourne la Roue!</h3>
+        <p>Appuie sur TOURNER et gagne un prix garanti!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="brand">BELLEPROS 440</div>
+    <div class="addr">Laval, Québec · @bellepros440</div>
+    <div class="addr">belleproslaval440.com</div>
+    <div class="legal">
+      Cette promotion est un bonus gratuit sur achat. Aucun achat additionnel requis pour participer au jeu.
+      Tout le monde gagne. Ce n'est pas une loterie au sens de la Loi sur les loteries du Québec.
+      Consultez un conseiller juridique pour toute question.
+    </div>
+  </footer>
+
+  <script>
+    // ==========================================
+    //  LA ROUE DE FORTUNE — Bellepros 440
+    //  Vanilla JS (no dependencies)
+    // ==========================================
+
+    const SEGMENTS = [
+      { label: 'Boisson\nGratuite', prob: 0.25, value: 3, color: '#1a6b3c', desc: 'Une boisson au choix offerte!' },
+      { label: 'Dessert\nGratuit', prob: 0.20, value: 5, color: '#b8860b', desc: 'Un dessert maison offert!' },
+      { label: '10$ Rabais', prob: 0.20, value: 10, color: '#2e4a8a', desc: '10$ de rabais sur ta prochaine visite!' },
+      { label: 'Poutine\nGratuite', prob: 0.15, value: 12, color: '#8b1a1a', desc: 'Une poutine loaded offerte!' },
+      { label: '25$ en\nBouffe', prob: 0.10, value: 25, color: '#6b2fa0', desc: '25$ de bouffe gratuite! GROS GAIN!' },
+      { label: 'Upgrade\nCombo', prob: 0.05, value: 4, color: '#0a7a7a', desc: 'Upgrade ton combo au max!' },
+      { label: '50$\nJACKPOT', prob: 0.05, value: 50, color: '#c41e3a', desc: 'JACKPOT 50$! T\'ES UN CHAMPION!' },
+      { label: 'Boisson\nGratuite', prob: 0.00, value: 3, color: '#2d5a1e', desc: 'Une boisson au choix offerte!' },
+    ];
+
+    const TOTAL = SEGMENTS.length;
+    const ARC = (2 * Math.PI) / TOTAL;
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const SIZE = canvas.width;
+    const CX = SIZE / 2;
+    const CY = SIZE / 2;
+    const RADIUS = SIZE / 2 - 30;
+
+    let phase = 'idle'; // idle | spinning | reveal
+    let rotation = 0;
+    let bulbFrame = 0;
+    let lastTick = -1;
+    let winner = null;
+    let confettiParts = [];
+    let audioCtx = null;
+
+    function getAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    function playTick() {
+      try {
+        const a = getAudio();
+        const osc = a.createOscillator();
+        const g = a.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 1800 + Math.random() * 400;
+        g.gain.setValueAtTime(0.07, a.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.05);
+        osc.connect(g); g.connect(a.destination);
+        osc.start(a.currentTime); osc.stop(a.currentTime + 0.05);
+      } catch(e){}
+    }
+
+    function playWin(big) {
+      try {
+        const a = getAudio();
+        const notes = big ? [523,659,784,1047,1319] : [523,659,784];
+        notes.forEach((f,i) => {
+          const osc = a.createOscillator();
+          const g = a.createGain();
+          osc.type = big ? 'triangle' : 'sine';
+          osc.frequency.value = f;
+          g.gain.setValueAtTime(0.12, a.currentTime + i*0.15);
+          g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + i*0.15 + 0.3);
+          osc.connect(g); g.connect(a.destination);
+          osc.start(a.currentTime + i*0.15);
+          osc.stop(a.currentTime + i*0.15 + 0.35);
+        });
+      } catch(e){}
+    }
+
+    function lighten(hex, amt) {
+      const n = parseInt(hex.slice(1),16);
+      const r = Math.min(255,((n>>16)&0xff)+amt);
+      const g = Math.min(255,((n>>8)&0xff)+amt);
+      const b = Math.min(255,(n&0xff)+amt);
+      return `rgb(${r},${g},${b})`;
+    }
+    function darken(hex, amt) {
+      const n = parseInt(hex.slice(1),16);
+      const r = Math.max(0,((n>>16)&0xff)-amt);
+      const g = Math.max(0,((n>>8)&0xff)-amt);
+      const b = Math.max(0,(n&0xff)-amt);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function weightedRandom() {
+      const r = Math.random();
+      let cum = 0;
+      for (let i = 0; i < 7; i++) {
+        cum += SEGMENTS[i].prob;
+        if (r <= cum) return i;
+      }
+      return 0;
+    }
+
+    // ====== DRAW WHEEL ======
+    function draw() {
+      ctx.clearRect(0, 0, SIZE, SIZE);
+
+      // Outer glow
+      const glowG = ctx.createRadialGradient(CX, CY, RADIUS-10, CX, CY, RADIUS+25);
+      glowG.addColorStop(0, 'rgba(255,215,0,0.12)');
+      glowG.addColorStop(1, 'rgba(255,215,0,0)');
+      ctx.fillStyle = glowG;
+      ctx.fillRect(0,0,SIZE,SIZE);
+
+      // Carnival bulbs (20)
+      for (let i = 0; i < 20; i++) {
+        const angle = (i/20)*Math.PI*2 - Math.PI/2;
+        const bx = CX + Math.cos(angle)*(RADIUS+14);
+        const by = CY + Math.sin(angle)*(RADIUS+14);
+        const isOn = (i + bulbFrame) % 3 !== 0;
+        const col = i%2===0 ? '#FFD700' : '#FF6B35';
+        ctx.beginPath();
+        ctx.arc(bx, by, 6, 0, Math.PI*2);
+        if (isOn) {
+          ctx.fillStyle = col;
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 14;
+        } else {
+          ctx.fillStyle = 'rgba(80,80,80,0.4)';
+          ctx.shadowBlur = 0;
+        }
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Outer ring
+      ctx.beginPath(); ctx.arc(CX,CY,RADIUS+2,0,Math.PI*2);
+      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 4; ctx.stroke();
+      ctx.beginPath(); ctx.arc(CX,CY,RADIUS-2,0,Math.PI*2);
+      ctx.strokeStyle = 'rgba(255,215,0,0.3)'; ctx.lineWidth = 2; ctx.stroke();
+
+      // Segments
+      for (let i = 0; i < TOTAL; i++) {
+        const sa = rotation + i * ARC - Math.PI/2;
+        const ea = sa + ARC;
+        const seg = SEGMENTS[i];
+
+        ctx.beginPath(); ctx.moveTo(CX,CY);
+        ctx.arc(CX,CY,RADIUS,sa,ea); ctx.closePath();
+        const grad = ctx.createRadialGradient(CX,CY,20,CX,CY,RADIUS);
+        grad.addColorStop(0, lighten(seg.color,30));
+        grad.addColorStop(0.5, seg.color);
+        grad.addColorStop(1, darken(seg.color,30));
+        ctx.fillStyle = grad; ctx.fill();
+        ctx.strokeStyle = 'rgba(255,215,0,0.6)'; ctx.lineWidth = 2; ctx.stroke();
+
+        // Text
+        ctx.save();
+        const ta = sa + ARC/2;
+        ctx.translate(CX,CY); ctx.rotate(ta);
+        const lines = seg.label.split('\n');
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 13px Arial, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4;
+        lines.forEach((line, li) => {
+          const off = RADIUS*0.62 + (li - (lines.length-1)/2)*16;
+          ctx.fillText(line, off, 0);
+        });
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+
+      // Center hub
+      const hubG = ctx.createRadialGradient(CX,CY,0,CX,CY,44);
+      hubG.addColorStop(0, '#FFD700');
+      hubG.addColorStop(0.6, '#b8860b');
+      hubG.addColorStop(1, '#8b6914');
+      ctx.beginPath(); ctx.arc(CX,CY,44,0,Math.PI*2);
+      ctx.fillStyle = hubG; ctx.fill();
+      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.fillStyle = '#1B1B2F';
+      ctx.font = 'bold 15px Arial, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('BELLE', CX, CY-9);
+      ctx.fillText('PROS', CX, CY+9);
+
+      // Pointer
+      ctx.beginPath();
+      ctx.moveTo(CX, CY - RADIUS - 6);
+      ctx.lineTo(CX - 17, CY - RADIUS - 38);
+      ctx.lineTo(CX + 17, CY - RADIUS - 38);
+      ctx.closePath();
+      ctx.fillStyle = '#E63946';
+      ctx.shadowColor = '#E63946'; ctx.shadowBlur = 12;
+      ctx.fill(); ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    }
+
+    // ====== CONFETTI ======
+    function spawnConfetti() {
+      confettiParts = [];
+      const colors = ['#FFD700','#FF6B35','#E63946','#fff','#6b2fa0','#0a7a7a'];
+      for (let i = 0; i < 150; i++) {
+        confettiParts.push({
+          x: Math.random() * window.innerWidth,
+          y: -20 - Math.random() * 300,
+          vx: (Math.random()-0.5)*7,
+          vy: Math.random()*4 + 2,
+          size: Math.random()*8 + 4,
+          color: colors[Math.floor(Math.random()*colors.length)],
+          rot: Math.random()*360,
+          vr: (Math.random()-0.5)*12,
+        });
+      }
+    }
+
+    function drawConfetti() {
+      const layer = document.getElementById('confettiLayer');
+      layer.innerHTML = '';
+      confettiParts = confettiParts.map(p => ({
+        ...p, x: p.x+p.vx, y: p.y+p.vy, vy: p.vy+0.15, rot: p.rot+p.vr,
+      })).filter(p => p.y < window.innerHeight + 50);
+
+      confettiParts.forEach(p => {
+        const el = document.createElement('div');
+        el.style.cssText = `position:absolute;left:${p.x}px;top:${p.y}px;width:${p.size}px;height:${p.size*0.6}px;background:${p.color};transform:rotate(${p.rot}deg);border-radius:2px;`;
+        layer.appendChild(el);
+      });
+
+      if (confettiParts.length > 0) requestAnimationFrame(drawConfetti);
+    }
+
+    // ====== UI UPDATES ======
+    function renderControls() {
+      const el = document.getElementById('controls');
+      if (phase === 'idle') {
+        el.innerHTML = `<button class="spin-btn" id="spinBtn"><span>TOURNER!</span></button>`;
+        document.getElementById('spinBtn').addEventListener('click', spin);
+      } else if (phase === 'spinning') {
+        el.innerHTML = `<div class="spinning-text">La roue tourne...</div>`;
+      } else {
+        el.innerHTML = '';
+      }
+    }
+
+    function renderResult() {
+      const el = document.getElementById('resultArea');
+      if (phase !== 'reveal' || !winner) { el.innerHTML = ''; return; }
+      const emoji = winner.value >= 25 ? '🎉🎉🎉' : '🎊';
+      el.innerHTML = `
+        <div class="result-card">
+          <div class="result-emoji">${emoji}</div>
+          <div class="result-title">FÉLICITATIONS!</div>
+          <div class="result-prize">${winner.label.replace('\n',' ')}</div>
+          <div class="result-desc">${winner.desc}</div>
+          <button class="reset-btn" id="resetBtn">Prochain Joueur →</button>
+        </div>`;
+      document.getElementById('resetBtn').addEventListener('click', reset);
+    }
+
+    function reset() {
+      phase = 'idle';
+      winner = null;
+      confettiParts = [];
+      document.getElementById('confettiLayer').innerHTML = '';
+      renderControls();
+      renderResult();
+    }
+
+    // ====== SPIN ======
+    function spin() {
+      if (phase !== 'idle') return;
+      // Resume audio context on user gesture
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      getAudio(); // ensure created on user gesture
+
+      phase = 'spinning';
+      winner = null;
+      confettiParts = [];
+      document.getElementById('confettiLayer').innerHTML = '';
+      renderControls();
+      renderResult();
+
+      const targetIdx = weightedRandom();
+      const fullRot = 5 + Math.random()*3;
+      const segAngle = targetIdx * ARC;
+      const within = Math.random()*ARC*0.6 + ARC*0.2;
+      const totalDelta = fullRot*Math.PI*2 + (2*Math.PI - segAngle - within);
+      const startRot = rotation;
+      const duration = 4500 + Math.random()*1500;
+      const startTime = performance.now();
+      lastTick = -1;
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        rotation = startRot + totalDelta * ease;
+
+        // Tick
+        const norm = ((rotation % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+        const curSeg = Math.floor(norm / ARC) % TOTAL;
+        if (curSeg !== lastTick) { lastTick = curSeg; playTick(); }
+
+        draw();
+
+        if (t < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          phase = 'reveal';
+          winner = SEGMENTS[targetIdx];
+          const isBig = winner.value >= 25 || winner.label.includes('Upgrade');
+          playWin(isBig);
+          if (isBig) { setTimeout(() => { spawnConfetti(); drawConfetti(); }, 200); }
+          renderControls();
+          renderResult();
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    // ====== PRIZE ROWS ======
+    function buildPrizeRows() {
+      const el = document.getElementById('prizeRows');
+      el.innerHTML = SEGMENTS.slice(0,7).map(s => `
+        <div class="prize-row">
+          <span class="prize-name">${s.label.replace('\n',' ')}</span>
+          <span class="prize-val">~${s.value}$</span>
+          <span class="prize-prob">${Math.round(s.prob*100)}%</span>
+        </div>
+      `).join('');
+    }
+
+    // ====== BULB ANIMATION ======
+    setInterval(() => { bulbFrame++; draw(); }, 350);
+
+    // ====== INIT ======
+    draw();
+    renderControls();
+    buildPrizeRows();
+  </script>
+</body>
+</html>
