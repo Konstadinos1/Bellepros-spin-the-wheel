@@ -2,7 +2,7 @@
 <html lang="fr-CA">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>La Roue de Fortune — Bellepros 440 · Laval</title>
   <meta name="description" content="Dépense 50$+ au Bellepros 440 à Laval et tourne la Roue de Fortune pour gagner des prix! Poutine gratuite, JACKPOT 50$ et plus!" />
   <meta property="og:title" content="La Roue de Fortune — Bellepros 440" />
@@ -85,6 +85,7 @@
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: 1000;
     }
+    .confetti-layer canvas { display: block; width: 100%; height: 100%; }
 
     /* ====== CANVAS ====== */
     .wheel-canvas-wrap {
@@ -201,6 +202,14 @@
       .hero h1 { font-size: 28px; letter-spacing: 2px; }
       .how-steps { gap: 16px; }
       .how-step { width: 150px; }
+      .spin-btn { padding: 14px 48px; }
+      .spin-btn span { font-size: 24px; }
+    }
+
+    /* ====== REDUCED MOTION ====== */
+    @media (prefers-reduced-motion: reduce) {
+      .spin-btn, .spinning-text { animation: none; }
+      .result-card { animation: none; }
     }
   </style>
 </head>
@@ -232,12 +241,14 @@
 
   <!-- WHEEL SECTION -->
   <section class="wheel-section" id="wheel">
-    <div class="confetti-layer" id="confettiLayer"></div>
+    <div class="confetti-layer" id="confettiLayer" aria-hidden="true">
+      <canvas id="confettiCanvas"></canvas>
+    </div>
     <div class="wheel-canvas-wrap">
-      <canvas id="wheelCanvas" width="440" height="440" style="width:440px;height:440px;"></canvas>
+      <canvas id="wheelCanvas" width="440" height="440" role="img" aria-label="Roue de fortune avec 8 segments de prix"></canvas>
     </div>
     <div id="controls"></div>
-    <div id="resultArea"></div>
+    <div id="resultArea" aria-live="polite"></div>
 
     <div class="prize-table" id="prizes">
       <div class="prize-table-title">Tableau des Prix</div>
@@ -297,13 +308,25 @@
     ];
 
     const TOTAL = SEGMENTS.length;
-    const ARC = (2 * Math.PI) / TOTAL;
+    const TWO_PI = 2 * Math.PI;
+    const ARC = TWO_PI / TOTAL;
+    const WINNABLE_COUNT = 7;          // last segment is visual filler (prob 0)
+    const BASE_SIZE = 440;             // logical drawing size; scaled responsively
+    const BULB_COUNT = 20;
+    const BULB_INTERVAL_MS = 350;
+    const CONFETTI_COUNT = 150;
+    const BIG_WIN_VALUE = 25;
+    const SPIN_DURATION_MS = 4500;
+    const SPIN_DURATION_JITTER_MS = 1500;
+    const REDUCED_MOTION_DURATION_MS = 1200;
+
     const canvas = document.getElementById('wheelCanvas');
     const ctx = canvas.getContext('2d');
-    const SIZE = canvas.width;
+    const SIZE = BASE_SIZE;
     const CX = SIZE / 2;
     const CY = SIZE / 2;
     const RADIUS = SIZE / 2 - 30;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     let phase = 'idle'; // idle | spinning | reveal
     let rotation = 0;
@@ -312,6 +335,19 @@
     let winner = null;
     let confettiParts = [];
     let audioCtx = null;
+
+    // Keep the wheel crisp on retina screens and sized to the viewport.
+    function resizeWheelCanvas() {
+      const displaySize = Math.min(BASE_SIZE, document.documentElement.clientWidth - 24);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.style.width = displaySize + 'px';
+      canvas.style.height = displaySize + 'px';
+      canvas.width = Math.round(displaySize * dpr);
+      canvas.height = Math.round(displaySize * dpr);
+      const scale = (displaySize * dpr) / BASE_SIZE;
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      draw();
+    }
 
     function getAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -368,7 +404,7 @@
     function weightedRandom() {
       const r = Math.random();
       let cum = 0;
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < WINNABLE_COUNT; i++) {
         cum += SEGMENTS[i].prob;
         if (r <= cum) return i;
       }
@@ -386,9 +422,9 @@
       ctx.fillStyle = glowG;
       ctx.fillRect(0,0,SIZE,SIZE);
 
-      // Carnival bulbs (20)
-      for (let i = 0; i < 20; i++) {
-        const angle = (i/20)*Math.PI*2 - Math.PI/2;
+      // Carnival bulbs
+      for (let i = 0; i < BULB_COUNT; i++) {
+        const angle = (i/BULB_COUNT)*TWO_PI - Math.PI/2;
         const bx = CX + Math.cos(angle)*(RADIUS+14);
         const by = CY + Math.sin(angle)*(RADIUS+14);
         const isOn = (i + bulbFrame) % 3 !== 0;
@@ -438,8 +474,8 @@
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4;
         lines.forEach((line, li) => {
-          const off = RADIUS*0.62 + (li - (lines.length-1)/2)*16;
-          ctx.fillText(line, off, 0);
+          const lineY = (li - (lines.length-1)/2) * 16;
+          ctx.fillText(line, RADIUS*0.62, lineY);
         });
         ctx.shadowBlur = 0;
         ctx.restore();
@@ -471,11 +507,19 @@
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
     }
 
-    // ====== CONFETTI ======
+    // ====== CONFETTI (canvas-based — no per-frame DOM churn) ======
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+
+    function resizeConfettiCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+
     function spawnConfetti() {
       confettiParts = [];
       const colors = ['#FFD700','#FF6B35','#E63946','#fff','#6b2fa0','#0a7a7a'];
-      for (let i = 0; i < 150; i++) {
+      for (let i = 0; i < CONFETTI_COUNT; i++) {
         confettiParts.push({
           x: Math.random() * window.innerWidth,
           y: -20 - Math.random() * 300,
@@ -487,22 +531,30 @@
           vr: (Math.random()-0.5)*12,
         });
       }
+      resizeConfettiCanvas();
     }
 
     function drawConfetti() {
-      const layer = document.getElementById('confettiLayer');
-      layer.innerHTML = '';
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
       confettiParts = confettiParts.map(p => ({
         ...p, x: p.x+p.vx, y: p.y+p.vy, vy: p.vy+0.15, rot: p.rot+p.vr,
       })).filter(p => p.y < window.innerHeight + 50);
 
       confettiParts.forEach(p => {
-        const el = document.createElement('div');
-        el.style.cssText = `position:absolute;left:${p.x}px;top:${p.y}px;width:${p.size}px;height:${p.size*0.6}px;background:${p.color};transform:rotate(${p.rot}deg);border-radius:2px;`;
-        layer.appendChild(el);
+        confettiCtx.save();
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate(p.rot * Math.PI / 180);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.fillRect(-p.size/2, -p.size*0.3, p.size, p.size*0.6);
+        confettiCtx.restore();
       });
 
       if (confettiParts.length > 0) requestAnimationFrame(drawConfetti);
+    }
+
+    function clearConfetti() {
+      confettiParts = [];
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
     }
 
     // ====== UI UPDATES ======
@@ -536,8 +588,7 @@
     function reset() {
       phase = 'idle';
       winner = null;
-      confettiParts = [];
-      document.getElementById('confettiLayer').innerHTML = '';
+      clearConfetti();
       renderControls();
       renderResult();
     }
@@ -551,18 +602,24 @@
 
       phase = 'spinning';
       winner = null;
-      confettiParts = [];
-      document.getElementById('confettiLayer').innerHTML = '';
+      clearConfetti();
       renderControls();
       renderResult();
 
       const targetIdx = weightedRandom();
-      const fullRot = 5 + Math.random()*3;
+      // Whole revolutions only — a fractional count would shift the landing angle.
+      const fullRot = 5 + Math.floor(Math.random()*3);
       const segAngle = targetIdx * ARC;
       const within = Math.random()*ARC*0.6 + ARC*0.2;
-      const totalDelta = fullRot*Math.PI*2 + (2*Math.PI - segAngle - within);
+      // Aim relative to the wheel's current offset so the pointer lands on
+      // the announced segment even after previous spins shifted the wheel.
       const startRot = rotation;
-      const duration = 4500 + Math.random()*1500;
+      const currentOffset = ((startRot % TWO_PI) + TWO_PI) % TWO_PI;
+      const targetOffset = TWO_PI - segAngle - within;
+      const totalDelta = fullRot*TWO_PI + ((targetOffset - currentOffset + TWO_PI) % TWO_PI);
+      const duration = prefersReducedMotion.matches
+        ? REDUCED_MOTION_DURATION_MS
+        : SPIN_DURATION_MS + Math.random()*SPIN_DURATION_JITTER_MS;
       const startTime = performance.now();
       lastTick = -1;
 
@@ -573,7 +630,7 @@
         rotation = startRot + totalDelta * ease;
 
         // Tick
-        const norm = ((rotation % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+        const norm = ((rotation % TWO_PI) + TWO_PI) % TWO_PI;
         const curSeg = Math.floor(norm / ARC) % TOTAL;
         if (curSeg !== lastTick) { lastTick = curSeg; playTick(); }
 
@@ -584,9 +641,12 @@
         } else {
           phase = 'reveal';
           winner = SEGMENTS[targetIdx];
-          const isBig = winner.value >= 25 || winner.label.includes('Upgrade');
+          const isBig = winner.value >= BIG_WIN_VALUE || winner.label.includes('Upgrade');
           playWin(isBig);
-          if (isBig) { setTimeout(() => { spawnConfetti(); drawConfetti(); }, 200); }
+          if (navigator.vibrate) navigator.vibrate(isBig ? [100, 50, 200] : 100);
+          if (isBig && !prefersReducedMotion.matches) {
+            setTimeout(() => { spawnConfetti(); drawConfetti(); }, 200);
+          }
           renderControls();
           renderResult();
         }
@@ -597,7 +657,7 @@
     // ====== PRIZE ROWS ======
     function buildPrizeRows() {
       const el = document.getElementById('prizeRows');
-      el.innerHTML = SEGMENTS.slice(0,7).map(s => `
+      el.innerHTML = SEGMENTS.slice(0, WINNABLE_COUNT).map(s => `
         <div class="prize-row">
           <span class="prize-name">${s.label.replace('\n',' ')}</span>
           <span class="prize-val">~${s.value}$</span>
@@ -607,10 +667,14 @@
     }
 
     // ====== BULB ANIMATION ======
-    setInterval(() => { bulbFrame++; draw(); }, 350);
+    if (!prefersReducedMotion.matches) {
+      setInterval(() => { bulbFrame++; draw(); }, BULB_INTERVAL_MS);
+    }
 
     // ====== INIT ======
-    draw();
+    window.addEventListener('resize', () => { resizeWheelCanvas(); resizeConfettiCanvas(); });
+    resizeConfettiCanvas();
+    resizeWheelCanvas();
     renderControls();
     buildPrizeRows();
   </script>

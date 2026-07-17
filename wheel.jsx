@@ -216,8 +216,8 @@ export default function RoueDeFortune() {
       ctx.shadowColor = 'rgba(0,0,0,0.8)';
       ctx.shadowBlur = 4;
       lines.forEach((line, li) => {
-        const offset = radius * 0.62 + (li - (lines.length - 1) / 2) * 16;
-        ctx.fillText(line, offset, 0);
+        const lineY = (li - (lines.length - 1) / 2) * 16;
+        ctx.fillText(line, radius * 0.62, lineY);
       });
       ctx.shadowBlur = 0;
       ctx.restore();
@@ -266,13 +266,18 @@ export default function RoueDeFortune() {
     setWinner(null);
     setConfettiParts([]);
 
+    const TWO_PI = 2 * Math.PI;
     const targetIndex = weightedRandom();
-    const fullRotations = 5 + Math.random() * 3;
+    // Whole revolutions only — a fractional count would shift the landing angle.
+    const fullRotations = 5 + Math.floor(Math.random() * 3);
     const segmentAngle = targetIndex * ARC;
     const withinSegment = Math.random() * ARC * 0.6 + ARC * 0.2;
-    const targetRotation = fullRotations * Math.PI * 2 + (2 * Math.PI - segmentAngle - withinSegment);
+    // Aim relative to the wheel's current offset so the pointer lands on
+    // the announced segment even after previous spins shifted the wheel.
     const startRot = rotation;
-    const totalDelta = targetRotation;
+    const currentOffset = ((startRot % TWO_PI) + TWO_PI) % TWO_PI;
+    const targetOffset = TWO_PI - segmentAngle - withinSegment;
+    const totalDelta = fullRotations * TWO_PI + ((targetOffset - currentOffset + TWO_PI) % TWO_PI);
     const duration = 4500 + Math.random() * 1500;
     const startTime = performance.now();
     lastTickRef.current = -1;
