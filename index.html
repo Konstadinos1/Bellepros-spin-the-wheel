@@ -443,10 +443,14 @@
         // Direct "write a review" link if you have the Google Place ID; otherwise
         // a Maps search for the business is used automatically.
         reviewUrl: '',
+        // Optional link to your privacy policy (Loi 25). Shown on the lead form if set.
+        privacyUrl: '',
+        // Optional per-location prize table; omit to use DEFAULT_SEGMENTS.
+        // segments: [ { label: '...', prob: 0.25, value: 3, color: '#1a6b3c', desc: '...' }, ... ],
       },
       // Add more franchise locations here, e.g.:
       // 'stjerome': { code: 'stjerome', name: 'BELLEPROS St-Jérôme', city: 'St-Jérôme, Québec',
-      //               handle: '@bellepros', site: 'bellepros.com', reviewUrl: '' },
+      //               handle: '@bellepros', site: 'bellepros.com', reviewUrl: '', privacyUrl: '' },
     };
     const DEFAULT_LOCATION = '440';
 
@@ -463,8 +467,8 @@
 
     const NS = 'bellepros';
 
-    // ---------- WHEEL SEGMENTS ----------
-    const SEGMENTS = [
+    // ---------- WHEEL SEGMENTS (default; can be overridden per location) ----------
+    const DEFAULT_SEGMENTS = [
       { label: 'Boisson\nGratuite', prob: 0.25, value: 3, color: '#1a6b3c', desc: 'Une boisson au choix offerte!' },
       { label: 'Dessert\nGratuit', prob: 0.20, value: 5, color: '#b8860b', desc: 'Un dessert maison offert!' },
       { label: '10$ Rabais', prob: 0.20, value: 10, color: '#2e4a8a', desc: '10$ de rabais sur ta prochaine visite!' },
@@ -475,10 +479,7 @@
       { label: 'Boisson\nGratuite', prob: 0.00, value: 3, color: '#2d5a1e', desc: 'Une boisson au choix offerte!' },
     ];
 
-    const TOTAL = SEGMENTS.length;
     const TWO_PI = 2 * Math.PI;
-    const ARC = TWO_PI / TOTAL;
-    const WINNABLE_COUNT = 7;          // last segment is visual filler (prob 0)
     const BASE_SIZE = 440;             // logical drawing size; scaled responsively
     const BULB_COUNT = 20;
     const BULB_INTERVAL_MS = 350;
@@ -502,6 +503,13 @@
     };
     state.loc = LOCATIONS[state.locCode];
     state.store = storeKeys(state.locCode);
+
+    // Per-location prize table (optional override). Winnable segments must come
+    // first; an optional filler segment (prob: 0) may come last for visual balance.
+    const SEGMENTS = (state.loc.segments && state.loc.segments.length) ? state.loc.segments : DEFAULT_SEGMENTS;
+    const TOTAL = SEGMENTS.length;
+    const ARC = TWO_PI / TOTAL;
+    const WINNABLE_COUNT = SEGMENTS.filter(s => s.prob > 0).length || TOTAL;
 
     const canvas = document.getElementById('wheelCanvas');
     const ctx = canvas.getContext('2d');
@@ -535,7 +543,13 @@
     function writeJSON(key, val) {
       try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
     }
-    function todayKey() { return new Date().toISOString().slice(0, 10); }
+    // Day boundary in the promo's local timezone (ET), not UTC — otherwise the
+    // "one spin per day" gate would reset around 8pm ET and allow a 2nd spin.
+    const PROMO_TZ = 'America/Toronto';
+    function todayKey() {
+      try { return new Date().toLocaleDateString('en-CA', { timeZone: PROMO_TZ }); }
+      catch (e) { return new Date().toISOString().slice(0, 10); }
+    }
 
     // ---------- ANALYTICS (no-op until a pixel is installed) ----------
     function track(event, props) {
@@ -999,44 +1013,80 @@
     }
 
     // ---------- LEAD FORM ----------
+    let overlayKeyHandler = null;
+    let overlayLastFocus = null;
+
     function showLeadForm(onDone) {
       const last = readJSON(state.store.lastLead, {}) || {};
       const mount = document.getElementById('overlayMount');
       const skippable = state.mode === 'kiosk';
+      const privacyLink = state.loc.privacyUrl
+        ? ` <a href="${escapeHtml(state.loc.privacyUrl)}" target="_blank" rel="noopener" style="color:#9ad;">Politique de confidentialité</a>`
+        : '';
       mount.innerHTML = `
-        <div class="overlay" role="dialog" aria-modal="true" aria-label="Débloque ton prix">
+        <div class="overlay" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
           <div class="lead-card">
-            <div class="lead-emoji">🎁</div>
-            <div class="lead-title">Débloque ton prix!</div>
+            <div class="lead-emoji" aria-hidden="true">🎁</div>
+            <div class="lead-title" id="leadTitle">Débloque ton prix!</div>
             <div class="lead-sub">Entre tes infos pour valider ton prix et recevoir nos prochaines offres.</div>
             <form id="leadForm" novalidate>
               <div class="field">
                 <label for="fName">Prénom</label>
-                <input class="input" id="fName" name="name" type="text" autocomplete="given-name" placeholder="Ex. Alex" value="${escapeHtml(last.name || '')}" />
-                <div class="field-error" id="eName"></div>
+                <input class="input" id="fName" name="name" type="text" autocomplete="given-name" placeholder="Ex. Alex" value="${escapeHtml(last.name || '')}" aria-describedby="eName" aria-invalid="false" />
+                <div class="field-error" id="eName" role="alert"></div>
               </div>
               <div class="field">
                 <label for="fPhone">Téléphone</label>
-                <input class="input" id="fPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(450) 000-0000" value="${escapeHtml(last.phone || '')}" />
-                <div class="field-error" id="ePhone"></div>
+                <input class="input" id="fPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(450) 000-0000" value="${escapeHtml(last.phone || '')}" aria-describedby="ePhone" aria-invalid="false" />
+                <div class="field-error" id="ePhone" role="alert"></div>
               </div>
               <div class="field">
                 <label for="fEmail">Courriel <span style="opacity:.6">(optionnel)</span></label>
-                <input class="input" id="fEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="toi@courriel.com" value="${escapeHtml(last.email || '')}" />
-                <div class="field-error" id="eEmail"></div>
+                <input class="input" id="fEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="toi@courriel.com" value="${escapeHtml(last.email || '')}" aria-describedby="eEmail" aria-invalid="false" />
+                <div class="field-error" id="eEmail" role="alert"></div>
               </div>
               <div class="consent">
                 <input type="checkbox" id="fConsent" ${last.consent ? 'checked' : ''} />
                 <label for="fConsent">J'accepte de recevoir les offres et promotions de ${escapeHtml(state.loc.name)} par SMS et/ou courriel. Je peux me désabonner à tout moment.</label>
               </div>
               <button type="submit" class="btn-primary" id="leadSubmit">RÉVÉLER MON PRIX 🎉</button>
-              <div class="privacy-note">Tes infos restent chez ${escapeHtml(state.loc.name)}. On ne les vend jamais.</div>
+              <div class="privacy-note">On utilise tes infos pour valider ton prix et t'envoyer nos offres. Elles restent chez ${escapeHtml(state.loc.name)} et ne sont jamais vendues.${privacyLink}</div>
               ${skippable ? `<button type="button" class="skip-link" id="leadSkip">Passer (mode borne)</button>` : `<button type="button" class="skip-link" id="leadSkip">Voir mon prix sans laisser mes infos</button>`}
             </form>
           </div>
         </div>`;
 
-      const form = document.getElementById('leadForm');
+      const overlay = mount.querySelector('.overlay');
+      overlayLastFocus = document.activeElement;
+      document.body.style.overflow = 'hidden';
+
+      const focusable = () => Array.from(overlay.querySelectorAll('input, button, a[href], select, textarea'))
+        .filter(el => !el.disabled && el.offsetParent !== null);
+
+      const finish = (fn) => {
+        closeOverlay();
+        fn();
+        onDone();
+        // Return focus to a sensible control now that the reveal is rendered.
+        const back = document.getElementById('resetBtn') || document.getElementById('shareNative')
+          || document.getElementById('spinBtn') || overlayLastFocus;
+        if (back && back.focus) { try { back.focus(); } catch (e) {} }
+      };
+
+      const doSkip = () => finish(() => track('lead_skip', {}));
+
+      overlayKeyHandler = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); doSkip(); return; }
+        if (e.key === 'Tab') {
+          const f = focusable();
+          if (!f.length) return;
+          const first = f[0], lastEl = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastEl.focus(); }
+          else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); first.focus(); }
+        }
+      };
+      overlay.addEventListener('keydown', overlayKeyHandler);
+
       const phoneEl = document.getElementById('fPhone');
       phoneEl.addEventListener('input', () => {
         const f = normalizePhone(phoneEl.value);
@@ -1044,7 +1094,7 @@
       });
       setTimeout(() => { const nEl = document.getElementById('fName'); if (nEl) nEl.focus(); }, 50);
 
-      form.addEventListener('submit', (ev) => {
+      document.getElementById('leadForm').addEventListener('submit', (ev) => {
         ev.preventDefault();
         const name = document.getElementById('fName').value.trim();
         const phoneRaw = document.getElementById('fPhone').value.trim();
@@ -1057,7 +1107,7 @@
         const phone = normalizePhone(phoneRaw);
         if (!phone) { setError('ePhone', 'fPhone', 'Entre un numéro à 10 chiffres.'); ok = false; }
         if (emailRaw && !isValidEmail(emailRaw)) { setError('eEmail', 'fEmail', 'Courriel invalide.'); ok = false; }
-        if (!ok) return;
+        if (!ok) { const fe = document.querySelector('.input.invalid'); if (fe) fe.focus(); return; }
 
         const lead = {
           created_at: new Date().toISOString(),
@@ -1075,23 +1125,23 @@
           utm_content: state.attribution.utm_content,
           ref: state.attribution.ref,
         };
-        saveLead(lead);
-        track('lead_submit', { consent: consent, has_email: !!emailRaw });
-        closeOverlay();
-        onDone();
+        finish(() => { saveLead(lead); track('lead_submit', { consent: consent, has_email: !!emailRaw }); });
       });
 
-      document.getElementById('leadSkip').addEventListener('click', () => {
-        track('lead_skip', {});
-        closeOverlay();
-        onDone();
-      });
+      document.getElementById('leadSkip').addEventListener('click', doSkip);
     }
     function setError(errId, inputId, msg) {
       const e = document.getElementById(errId); if (e) e.textContent = msg;
-      const i = document.getElementById(inputId); if (i) i.classList.toggle('invalid', !!msg);
+      const i = document.getElementById(inputId);
+      if (i) { i.classList.toggle('invalid', !!msg); i.setAttribute('aria-invalid', msg ? 'true' : 'false'); }
     }
-    function closeOverlay() { document.getElementById('overlayMount').innerHTML = ''; }
+    function closeOverlay() {
+      const overlay = document.querySelector('.overlay');
+      if (overlay && overlayKeyHandler) overlay.removeEventListener('keydown', overlayKeyHandler);
+      overlayKeyHandler = null;
+      document.body.style.overflow = '';
+      document.getElementById('overlayMount').innerHTML = '';
+    }
 
     // ---------- SPIN ----------
     function spin() {
