@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>La Roue de Fortune — Bellepros 440 · Laval</title>
-  <meta name="description" content="Dépense 50$+ au Bellepros 440 à Laval et tourne la Roue de Fortune pour gagner des prix! Poutine gratuite, JACKPOT 50$ et plus!" />
-  <meta property="og:title" content="La Roue de Fortune — Bellepros 440" />
-  <meta property="og:description" content="Dépense 50$+ = 1 Spin Gratuit! Tout le monde gagne!" />
+  <title>La Roue de Fortune — Bellepros · Laval</title>
+  <meta name="description" content="Dépense 50$+ chez Bellepros et tourne la Roue de Fortune pour gagner des prix! Poutine gratuite, JACKPOT 50$ et plus. Tout le monde gagne!" />
+  <meta property="og:title" content="La Roue de Fortune — Bellepros" />
+  <meta property="og:description" content="Dépense 50$+ = 1 tour gratuit! Tout le monde gagne." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://belleproslaval440.com" />
+  <meta name="theme-color" content="#0a0a1a" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎰</text></svg>" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      width: 100%; height: 100%; overflow-x: hidden;
+      width: 100%; min-height: 100%; overflow-x: hidden;
       font-family: Arial, 'Helvetica Neue', sans-serif;
       background: #0a0a1a;
     }
     body { display: flex; flex-direction: column; min-height: 100vh; }
+    [hidden] { display: none !important; }
 
     /* ====== NAV BAR ====== */
     .nav {
@@ -28,10 +30,7 @@
       position: sticky; top: 0; z-index: 100;
       backdrop-filter: blur(8px);
     }
-    .nav-logo {
-      display: flex; align-items: center; gap: 10px;
-      text-decoration: none;
-    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .nav-logo-icon {
       width: 40px; height: 40px; border-radius: 50%;
       background: linear-gradient(135deg, #FFD700, #FF6B35);
@@ -88,60 +87,110 @@
     .confetti-layer canvas { display: block; width: 100%; height: 100%; }
 
     /* ====== CANVAS ====== */
-    .wheel-canvas-wrap {
-      position: relative; margin-bottom: 16px;
-    }
+    .wheel-canvas-wrap { position: relative; margin-bottom: 16px; }
 
     /* ====== SPIN BUTTON ====== */
     .spin-btn {
       background: linear-gradient(135deg, #E63946, #c41e3a);
       border: none; border-radius: 50px; padding: 16px 64px;
-      cursor: pointer; margin-bottom: 16px;
+      cursor: pointer; margin-bottom: 8px;
       animation: pulseGlow 1.5s infinite, pulse 2s infinite;
       transition: transform 0.1s;
     }
     .spin-btn:active { transform: scale(0.96); }
+    .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; animation: none; }
     .spin-btn span {
       color: #fff; font-size: 28px; font-weight: bold;
       letter-spacing: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
+    .spin-hint { color: rgba(255,255,255,0.45); font-size: 12px; margin-bottom: 16px; text-align: center; }
 
     .spinning-text {
       color: #FFD700; font-size: 22px; font-weight: bold;
       margin-bottom: 16px; animation: pulse 0.5s infinite;
     }
 
-    /* ====== RESULT CARD ====== */
-    .result-card {
+    /* ====== RESULT / CARDS ====== */
+    .result-card, .already-card {
       background: linear-gradient(135deg, rgba(27,27,47,0.97), rgba(10,10,26,0.97));
       border: 2px solid #FFD700; border-radius: 20px;
-      padding: 24px 36px; text-align: center;
+      padding: 24px 28px; text-align: center;
       margin-bottom: 16px; animation: fadeInUp 0.5s ease-out;
-      max-width: 380px; width: 90%;
+      max-width: 400px; width: 92%;
       box-shadow: 0 0 40px rgba(255,215,0,0.15);
     }
     .result-emoji { font-size: 48px; margin-bottom: 8px; }
     .result-title { color: #FFD700; font-size: 24px; font-weight: bold; margin-bottom: 6px; letter-spacing: 3px; }
     .result-prize { color: #FF6B35; font-size: 26px; font-weight: bold; margin-bottom: 8px; }
-    .result-desc { color: #ddd; font-size: 15px; margin-bottom: 20px; }
+    .result-desc { color: #ddd; font-size: 15px; margin-bottom: 16px; }
+
+    /* ====== REDEMPTION CODE ====== */
+    .code-box {
+      background: rgba(255,215,0,0.08); border: 1px dashed rgba(255,215,0,0.5);
+      border-radius: 12px; padding: 12px 16px; margin: 4px 0 12px;
+    }
+    .code-label { color: rgba(255,255,255,0.55); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .code-value { color: #FFD700; font-size: 26px; font-weight: bold; letter-spacing: 3px; font-family: 'Courier New', monospace; }
+    .code-meta { color: rgba(255,255,255,0.45); font-size: 12px; margin-top: 6px; }
+    .code-instruct { color: #ddd; font-size: 13px; margin-bottom: 12px; }
+
+    /* ====== BUTTONS ====== */
+    .btn-primary {
+      background: linear-gradient(135deg, #FF6B35, #e55a2b);
+      border: none; border-radius: 30px; padding: 13px 28px;
+      color: #fff; font-size: 16px; font-weight: bold;
+      cursor: pointer; letter-spacing: 1px; transition: transform 0.1s;
+      width: 100%; margin-top: 4px;
+    }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-ghost {
+      background: transparent; border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 30px; padding: 11px 20px; color: rgba(255,255,255,0.85);
+      font-size: 14px; font-weight: bold; cursor: pointer; transition: transform 0.1s;
+    }
+    .btn-ghost:active { transform: scale(0.97); }
     .reset-btn {
       background: linear-gradient(135deg, #FF6B35, #e55a2b);
       border: none; border-radius: 30px; padding: 12px 40px;
       color: #fff; font-size: 16px; font-weight: bold;
       cursor: pointer; letter-spacing: 1px; transition: transform 0.1s;
+      margin-top: 6px;
     }
     .reset-btn:active { transform: scale(0.96); }
+    .skip-link {
+      display: inline-block; margin-top: 12px; background: none; border: none;
+      color: rgba(255,255,255,0.4); font-size: 12px; text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* ====== SHARE + REVIEW ====== */
+    .cta-block { margin-top: 8px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .cta-title { color: #FFD700; font-size: 14px; font-weight: bold; margin-bottom: 8px; }
+    .cta-sub { color: rgba(255,255,255,0.5); font-size: 12px; margin-bottom: 10px; }
+    .share-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+    .share-btn {
+      flex: 1; min-width: 90px; border: none; border-radius: 12px; padding: 10px 8px;
+      color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; transition: transform 0.1s;
+    }
+    .share-btn:active { transform: scale(0.96); }
+    .share-primary { background: linear-gradient(135deg,#6b2fa0,#8e44c9); }
+    .share-fb { background: #1877f2; }
+    .share-sms { background: #0a7a44; }
+    .cta-review {
+      display: block; text-decoration: none; border-radius: 12px; padding: 11px;
+      background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.35);
+      color: #FFD700; font-size: 14px; font-weight: bold; text-align: center;
+    }
 
     /* ====== PRIZE TABLE ====== */
     .prize-table {
       background: rgba(27,27,47,0.6); border: 1px solid rgba(255,215,0,0.15);
       border-radius: 14px; padding: 14px 20px;
-      margin-bottom: 12px; max-width: 380px; width: 90%;
+      margin-bottom: 12px; max-width: 400px; width: 92%;
     }
     .prize-table-title {
       color: #FFD700; font-size: 13px; font-weight: bold;
-      text-align: center; margin-bottom: 10px; letter-spacing: 2px;
-      text-transform: uppercase;
+      text-align: center; margin-bottom: 10px; letter-spacing: 2px; text-transform: uppercase;
     }
     .prize-row {
       display: flex; justify-content: space-between; align-items: center;
@@ -179,24 +228,99 @@
     }
     .site-footer .brand { color: #FFD700; font-size: 16px; font-weight: bold; letter-spacing: 2px; margin-bottom: 6px; }
     .site-footer .addr { color: rgba(255,255,255,0.3); font-size: 12px; margin-bottom: 4px; }
-    .site-footer .legal { color: rgba(255,255,255,0.2); font-size: 10px; margin-top: 10px; line-height: 1.5; }
+    .site-footer .legal { color: rgba(255,255,255,0.2); font-size: 10px; margin-top: 10px; line-height: 1.5; max-width: 640px; margin-left: auto; margin-right: auto; }
+
+    /* ====== LEAD FORM OVERLAY ====== */
+    .overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(3,3,10,0.82); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .lead-card {
+      background: linear-gradient(135deg, #1B1B2F, #0a0a1a);
+      border: 2px solid #FFD700; border-radius: 20px;
+      padding: 24px 22px; max-width: 380px; width: 100%;
+      box-shadow: 0 0 50px rgba(255,215,0,0.2);
+      max-height: 92vh; overflow-y: auto;
+    }
+    .lead-emoji { font-size: 40px; text-align: center; margin-bottom: 4px; }
+    .lead-title { color: #FFD700; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+    .lead-sub { color: rgba(255,255,255,0.6); font-size: 13px; text-align: center; margin-bottom: 16px; }
+    .field { margin-bottom: 12px; text-align: left; }
+    .field label { display: block; color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 4px; font-weight: bold; }
+    .input {
+      width: 100%; padding: 12px 14px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05);
+      color: #fff; font-size: 16px; outline: none; transition: border-color 0.15s;
+    }
+    .input:focus { border-color: #FFD700; }
+    .input::placeholder { color: rgba(255,255,255,0.3); }
+    .input.invalid { border-color: #E63946; }
+    .field-error { color: #ff7a85; font-size: 12px; margin-top: 4px; min-height: 14px; }
+    .consent { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0 14px; text-align: left; }
+    .consent input { margin-top: 2px; width: 18px; height: 18px; flex-shrink: 0; accent-color: #FF6B35; }
+    .consent label { color: rgba(255,255,255,0.55); font-size: 11px; line-height: 1.4; }
+    .privacy-note { color: rgba(255,255,255,0.35); font-size: 11px; text-align: center; margin-top: 10px; }
+
+    /* ====== TOAST ====== */
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+      background: #FFD700; color: #1B1B2F; font-weight: bold; font-size: 14px;
+      padding: 12px 22px; border-radius: 30px; z-index: 3000;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.4); animation: fadeInUp 0.25s ease-out;
+      max-width: 90vw; text-align: center;
+    }
+
+    /* ====== ADMIN PANEL ====== */
+    .admin-panel {
+      position: fixed; right: 12px; bottom: 12px; z-index: 2500;
+      width: 320px; max-width: calc(100vw - 24px);
+      background: #10101f; border: 1px solid rgba(255,215,0,0.3); border-radius: 14px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6); font-size: 13px; color: #ddd;
+      max-height: 80vh; overflow-y: auto;
+    }
+    .admin-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer; position: sticky; top: 0; background: #10101f;
+    }
+    .admin-head strong { color: #FFD700; font-size: 13px; letter-spacing: 1px; }
+    .admin-body { padding: 12px 14px; }
+    .admin-body h4 { color: #FF6B35; font-size: 12px; margin: 12px 0 6px; text-transform: uppercase; letter-spacing: 1px; }
+    .admin-body h4:first-child { margin-top: 0; }
+    .admin-stat { display: flex; justify-content: space-between; padding: 3px 0; }
+    .admin-stat b { color: #FFD700; }
+    .admin-field { margin-bottom: 8px; }
+    .admin-field label { display: block; color: rgba(255,255,255,0.55); font-size: 11px; margin-bottom: 3px; }
+    .admin-field input, .admin-field select {
+      width: 100%; padding: 7px 9px; border-radius: 8px; font-size: 13px;
+      border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #fff;
+    }
+    .admin-url {
+      word-break: break-all; background: rgba(255,255,255,0.05); border-radius: 8px;
+      padding: 8px; font-size: 11px; color: #9ad; margin: 6px 0; font-family: monospace;
+    }
+    .admin-btn {
+      width: 100%; padding: 8px; border-radius: 8px; border: none; cursor: pointer;
+      font-weight: bold; font-size: 12px; margin-top: 4px;
+    }
+    .admin-btn.gold { background: #FFD700; color: #1B1B2F; }
+    .admin-btn.orange { background: #FF6B35; color: #fff; }
+    .admin-btn.danger { background: transparent; border: 1px solid #E63946; color: #ff7a85; }
 
     /* ====== ANIMATIONS ====== */
     @keyframes pulseGlow {
       0%, 100% { box-shadow: 0 0 20px rgba(230,57,70,0.5), 0 0 40px rgba(230,57,70,0.2); }
       50% { box-shadow: 0 0 35px rgba(230,57,70,0.8), 0 0 70px rgba(230,57,70,0.4); }
     }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
     /* ====== RESPONSIVE ====== */
     @media (max-width: 600px) {
+      .nav { padding: 12px 16px; }
       .nav-links { gap: 14px; }
       .nav-links a { font-size: 12px; }
       .hero h1 { font-size: 28px; letter-spacing: 2px; }
@@ -208,8 +332,7 @@
 
     /* ====== REDUCED MOTION ====== */
     @media (prefers-reduced-motion: reduce) {
-      .spin-btn, .spinning-text { animation: none; }
-      .result-card { animation: none; }
+      .spin-btn, .spinning-text, .result-card, .already-card, .overlay, .toast { animation: none; }
     }
   </style>
 </head>
@@ -220,8 +343,8 @@
     <a href="#" class="nav-logo">
       <div class="nav-logo-icon">BP</div>
       <div>
-        <div class="nav-logo-text">BELLEPROS 440</div>
-        <div class="nav-logo-sub">Laval, Québec</div>
+        <div class="nav-logo-text" id="navName">BELLEPROS</div>
+        <div class="nav-logo-sub" id="navCity">Laval, Québec</div>
       </div>
     </a>
     <div class="nav-links">
@@ -233,10 +356,10 @@
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-badge">PROMOTION EN MAGASIN</div>
+    <div class="hero-badge" id="heroBadge">PROMOTION EN MAGASIN</div>
     <h1>LA ROUE DE FORTUNE</h1>
     <p>Tout le monde gagne. Aucun perdant.</p>
-    <div class="rule">Dépense 50$+ = 1 Spin Gratuit!</div>
+    <div class="rule" id="heroRule">Dépense 50$+ = 1 tour gratuit!</div>
   </section>
 
   <!-- WHEEL SECTION -->
@@ -263,39 +386,84 @@
       <div class="how-step">
         <div class="how-step-num">1</div>
         <h3>Commande 50$+</h3>
-        <p>Fais une commande de 50$ ou plus au Bellepros 440.</p>
+        <p id="howStep1">Fais une commande de 50$ ou plus chez Bellepros.</p>
       </div>
       <div class="how-step">
         <div class="how-step-num">2</div>
-        <h3>Montre ton recu</h3>
-        <p>Montre ta facture au staff pour activer ton spin.</p>
+        <h3>Montre ton reçu</h3>
+        <p>Montre ta facture au comptoir pour débloquer ton tour.</p>
       </div>
       <div class="how-step">
         <div class="how-step-num">3</div>
         <h3>Tourne la Roue!</h3>
-        <p>Appuie sur TOURNER et gagne un prix garanti!</p>
+        <p>Appuie sur TOURNER et gagne un prix garanti. Montre ton code au comptoir.</p>
       </div>
     </div>
   </section>
 
   <!-- FOOTER -->
   <footer class="site-footer">
-    <div class="brand">BELLEPROS 440</div>
-    <div class="addr">Laval, Québec · @bellepros440</div>
-    <div class="addr">belleproslaval440.com</div>
+    <div class="brand" id="footBrand">BELLEPROS</div>
+    <div class="addr" id="footAddr">Laval, Québec</div>
+    <div class="addr" id="footSite">belleproslaval440.com</div>
     <div class="legal">
-      Cette promotion est un bonus gratuit sur achat. Aucun achat additionnel requis pour participer au jeu.
-      Tout le monde gagne. Ce n'est pas une loterie au sens de la Loi sur les loteries du Québec.
+      Cette promotion est un bonus gratuit sur achat. Aucun achat additionnel n'est requis pour participer au jeu.
+      Tout le monde gagne. Ce n'est pas une loterie au sens de la Loi sur les loteries du Québec. Un tour par client, par visite admissible.
+      Les prix ne sont pas échangeables contre de l'argent. Bellepros peut modifier ou mettre fin à la promotion en tout temps.
       Consultez un conseiller juridique pour toute question.
     </div>
   </footer>
 
-  <script>
-    // ==========================================
-    //  LA ROUE DE FORTUNE — Bellepros 440
-    //  Vanilla JS (no dependencies)
-    // ==========================================
+  <!-- Overlay + toast mount points -->
+  <div id="overlayMount"></div>
+  <div id="toastMount"></div>
+  <div id="adminMount"></div>
 
+  <script>
+    // ==========================================================
+    //  LA ROUE DE FORTUNE — Bellepros (franchise marketing tool)
+    //  Vanilla JS, zero dependencies, fully self-contained.
+    //
+    //  URL parameters:
+    //    ?loc=440        -> which franchise location (see LOCATIONS)
+    //    ?mode=kiosk     -> in-store staff tablet: no daily limit, skippable form
+    //    ?admin=1        -> owner dashboard (leads, CSV export, link builder)
+    //    ?ref=CODE       -> referral attribution
+    //    ?utm_source=... -> campaign attribution (all utm_* captured)
+    // ==========================================================
+
+    // ---------- CONFIG ----------
+    const LOCATIONS = {
+      '440': {
+        code: '440',
+        name: 'BELLEPROS 440',
+        city: 'Laval, Québec',
+        handle: '@bellepros440',
+        site: 'belleproslaval440.com',
+        // Direct "write a review" link if you have the Google Place ID; otherwise
+        // a Maps search for the business is used automatically.
+        reviewUrl: '',
+      },
+      // Add more franchise locations here, e.g.:
+      // 'stjerome': { code: 'stjerome', name: 'BELLEPROS St-Jérôme', city: 'St-Jérôme, Québec',
+      //               handle: '@bellepros', site: 'bellepros.com', reviewUrl: '' },
+    };
+    const DEFAULT_LOCATION = '440';
+
+    const CAMPAIGN = {
+      id: 'roue-fortune-2026',
+      spendThreshold: 50,      // dollars
+      codeExpiryDays: 7,       // redemption code validity
+      bonusSpinOnShare: true,  // sharing unlocks one extra spin (once/day, customer mode)
+    };
+
+    // Optional: set to a URL to also POST each captured lead server-side.
+    // Left null so the tool is 100% front-end today; Supabase/webhook is a drop-in.
+    const LEAD_WEBHOOK = null;
+
+    const NS = 'bellepros';
+
+    // ---------- WHEEL SEGMENTS ----------
     const SEGMENTS = [
       { label: 'Boisson\nGratuite', prob: 0.25, value: 3, color: '#1a6b3c', desc: 'Une boisson au choix offerte!' },
       { label: 'Dessert\nGratuit', prob: 0.20, value: 5, color: '#b8860b', desc: 'Un dessert maison offert!' },
@@ -319,6 +487,21 @@
     const SPIN_DURATION_MS = 4500;
     const SPIN_DURATION_JITTER_MS = 1500;
     const REDUCED_MOTION_DURATION_MS = 1200;
+    const DAY_MS = 86400000;
+
+    // ---------- APP STATE ----------
+    const params = new URLSearchParams(location.search);
+    const state = {
+      locCode: LOCATIONS[params.get('loc')] ? params.get('loc') : DEFAULT_LOCATION,
+      mode: params.get('mode') === 'kiosk' ? 'kiosk' : 'customer',
+      loc: null,
+      store: null,
+      attribution: null,
+      refCode: null,
+      currentPlay: null,
+    };
+    state.loc = LOCATIONS[state.locCode];
+    state.store = storeKeys(state.locCode);
 
     const canvas = document.getElementById('wheelCanvas');
     const ctx = canvas.getContext('2d');
@@ -336,24 +519,126 @@
     let confettiParts = [];
     let audioCtx = null;
 
-    // Keep the wheel crisp on retina screens and sized to the viewport.
-    function resizeWheelCanvas() {
-      const displaySize = Math.min(BASE_SIZE, document.documentElement.clientWidth - 24);
-      const dpr = window.devicePixelRatio || 1;
-      canvas.style.width = displaySize + 'px';
-      canvas.style.height = displaySize + 'px';
-      canvas.width = Math.round(displaySize * dpr);
-      canvas.height = Math.round(displaySize * dpr);
-      const scale = (displaySize * dpr) / BASE_SIZE;
-      ctx.setTransform(scale, 0, 0, scale, 0, 0);
-      draw();
+    // ---------- STORAGE HELPERS ----------
+    function storeKeys(loc) {
+      return {
+        leads: `${NS}:${loc}:leads`,
+        plays: `${NS}:${loc}:plays`,
+        bonus: `${NS}:${loc}:bonus`,
+        lastLead: `${NS}:${loc}:lastlead`,
+      };
+    }
+    function readJSON(key, fallback) {
+      try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+      catch (e) { return fallback; }
+    }
+    function writeJSON(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+    }
+    function todayKey() { return new Date().toISOString().slice(0, 10); }
+
+    // ---------- ANALYTICS (no-op until a pixel is installed) ----------
+    function track(event, props) {
+      const payload = Object.assign({ event: event, loc: state.locCode, mode: state.mode }, props || {});
+      try { (window.dataLayer = window.dataLayer || []).push(payload); } catch (e) {}
+      try { if (typeof window.gtag === 'function') window.gtag('event', event, payload); } catch (e) {}
+      try { if (typeof window.fbq === 'function') window.fbq('trackCustom', event, payload); } catch (e) {}
+      try { if (typeof window.plausible === 'function') window.plausible(event, { props: payload }); } catch (e) {}
     }
 
+    // ---------- ATTRIBUTION ----------
+    function captureAttribution() {
+      return {
+        utm_source: params.get('utm_source') || '',
+        utm_medium: params.get('utm_medium') || '',
+        utm_campaign: params.get('utm_campaign') || '',
+        utm_content: params.get('utm_content') || '',
+        ref: params.get('ref') || '',
+        referrer: (document.referrer || '').slice(0, 200),
+        landed_at: new Date().toISOString(),
+      };
+    }
+    function myRefCode() {
+      let c = readJSON(`${NS}:refcode`, null);
+      if (!c) { c = 'R' + Math.random().toString(36).slice(2, 8).toUpperCase(); writeJSON(`${NS}:refcode`, c); }
+      return c;
+    }
+
+    // ---------- SPIN ELIGIBILITY (anti-abuse) ----------
+    function playsToday() { return readJSON(state.store.plays, []).filter(p => p.day === todayKey()); }
+    function bonusActiveToday() { return readJSON(state.store.bonus, {}).day === todayKey(); }
+    function spinsAllowedToday() { return 1 + (bonusActiveToday() ? 1 : 0); }
+    function canSpin() {
+      if (state.mode === 'kiosk') return true;
+      return playsToday().length < spinsAllowedToday();
+    }
+    function latestActivePlay() {
+      const now = Date.now();
+      const active = readJSON(state.store.plays, []).filter(p => p.expiresAt > now);
+      return active.length ? active[active.length - 1] : null;
+    }
+
+    // ---------- REDEMPTION CODES ----------
+    function genCode(locCode) {
+      const t = Math.floor(Date.now() / 1000).toString(36).toUpperCase().slice(-4);
+      const r = Math.random().toString(36).slice(2, 6).toUpperCase();
+      const tag = String(locCode).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4) || 'BP';
+      return `BP${tag}-${t}-${r}`;
+    }
+    function recordPlay(seg) {
+      const now = Date.now();
+      const rec = {
+        day: todayKey(),
+        created_at: new Date(now).toISOString(),
+        location: state.locCode,
+        prize: seg.label.replace('\n', ' '),
+        prize_value: seg.value,
+        code: genCode(state.locCode),
+        expiresAt: now + CAMPAIGN.codeExpiryDays * DAY_MS,
+        claimed: false,
+      };
+      const plays = readJSON(state.store.plays, []);
+      plays.push(rec);
+      writeJSON(state.store.plays, plays);
+      state.currentPlay = rec;
+      return rec;
+    }
+
+    // ---------- LEADS ----------
+    function saveLead(lead) {
+      const arr = readJSON(state.store.leads, []);
+      arr.push(lead);
+      writeJSON(state.store.leads, arr);
+      writeJSON(state.store.lastLead, { name: lead.name, phone: lead.phone, email: lead.email, consent: lead.consent });
+      if (LEAD_WEBHOOK) {
+        try {
+          const body = JSON.stringify(lead);
+          if (navigator.sendBeacon) navigator.sendBeacon(LEAD_WEBHOOK, body);
+          else fetch(LEAD_WEBHOOK, { method: 'POST', body: body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {});
+        } catch (e) {}
+      }
+    }
+    function hasLeadOnDevice() { return !!readJSON(state.store.lastLead, null); }
+
+    // ---------- VALIDATION ----------
+    function normalizePhone(v) {
+      const d = String(v || '').replace(/\D/g, '');
+      const ten = (d.length === 11 && d[0] === '1') ? d.slice(1) : d;
+      if (ten.length !== 10) return null;
+      return `(${ten.slice(0, 3)}) ${ten.slice(3, 6)}-${ten.slice(6)}`;
+    }
+    function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim()); }
+    function formatDateQC(ts) {
+      const d = new Date(ts);
+      const p = n => String(n).padStart(2, '0');
+      return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+    }
+
+    // ---------- AUDIO ----------
     function getAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       return audioCtx;
     }
-
     function playTick() {
       try {
         const a = getAudio();
@@ -365,40 +650,34 @@
         g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.05);
         osc.connect(g); g.connect(a.destination);
         osc.start(a.currentTime); osc.stop(a.currentTime + 0.05);
-      } catch(e){}
+      } catch (e) {}
     }
-
     function playWin(big) {
       try {
         const a = getAudio();
-        const notes = big ? [523,659,784,1047,1319] : [523,659,784];
-        notes.forEach((f,i) => {
+        const notes = big ? [523, 659, 784, 1047, 1319] : [523, 659, 784];
+        notes.forEach((f, i) => {
           const osc = a.createOscillator();
           const g = a.createGain();
           osc.type = big ? 'triangle' : 'sine';
           osc.frequency.value = f;
-          g.gain.setValueAtTime(0.12, a.currentTime + i*0.15);
-          g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + i*0.15 + 0.3);
+          g.gain.setValueAtTime(0.12, a.currentTime + i * 0.15);
+          g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + i * 0.15 + 0.3);
           osc.connect(g); g.connect(a.destination);
-          osc.start(a.currentTime + i*0.15);
-          osc.stop(a.currentTime + i*0.15 + 0.35);
+          osc.start(a.currentTime + i * 0.15);
+          osc.stop(a.currentTime + i * 0.15 + 0.35);
         });
-      } catch(e){}
+      } catch (e) {}
     }
 
+    // ---------- COLOR HELPERS ----------
     function lighten(hex, amt) {
-      const n = parseInt(hex.slice(1),16);
-      const r = Math.min(255,((n>>16)&0xff)+amt);
-      const g = Math.min(255,((n>>8)&0xff)+amt);
-      const b = Math.min(255,(n&0xff)+amt);
-      return `rgb(${r},${g},${b})`;
+      const n = parseInt(hex.slice(1), 16);
+      return `rgb(${Math.min(255, ((n >> 16) & 0xff) + amt)},${Math.min(255, ((n >> 8) & 0xff) + amt)},${Math.min(255, (n & 0xff) + amt)})`;
     }
     function darken(hex, amt) {
-      const n = parseInt(hex.slice(1),16);
-      const r = Math.max(0,((n>>16)&0xff)-amt);
-      const g = Math.max(0,((n>>8)&0xff)-amt);
-      const b = Math.max(0,(n&0xff)-amt);
-      return `rgb(${r},${g},${b})`;
+      const n = parseInt(hex.slice(1), 16);
+      return `rgb(${Math.max(0, ((n >> 16) & 0xff) - amt)},${Math.max(0, ((n >> 8) & 0xff) - amt)},${Math.max(0, (n & 0xff) - amt)})`;
     }
 
     function weightedRandom() {
@@ -411,91 +690,91 @@
       return 0;
     }
 
-    // ====== DRAW WHEEL ======
+    // ---------- RESPONSIVE CANVAS ----------
+    function resizeWheelCanvas() {
+      const displaySize = Math.min(BASE_SIZE, document.documentElement.clientWidth - 24);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.style.width = displaySize + 'px';
+      canvas.style.height = displaySize + 'px';
+      canvas.width = Math.round(displaySize * dpr);
+      canvas.height = Math.round(displaySize * dpr);
+      const scale = (displaySize * dpr) / BASE_SIZE;
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      draw();
+    }
+
+    // ---------- DRAW WHEEL ----------
     function draw() {
       ctx.clearRect(0, 0, SIZE, SIZE);
 
-      // Outer glow
-      const glowG = ctx.createRadialGradient(CX, CY, RADIUS-10, CX, CY, RADIUS+25);
+      const glowG = ctx.createRadialGradient(CX, CY, RADIUS - 10, CX, CY, RADIUS + 25);
       glowG.addColorStop(0, 'rgba(255,215,0,0.12)');
       glowG.addColorStop(1, 'rgba(255,215,0,0)');
       ctx.fillStyle = glowG;
-      ctx.fillRect(0,0,SIZE,SIZE);
+      ctx.fillRect(0, 0, SIZE, SIZE);
 
-      // Carnival bulbs
       for (let i = 0; i < BULB_COUNT; i++) {
-        const angle = (i/BULB_COUNT)*TWO_PI - Math.PI/2;
-        const bx = CX + Math.cos(angle)*(RADIUS+14);
-        const by = CY + Math.sin(angle)*(RADIUS+14);
+        const angle = (i / BULB_COUNT) * TWO_PI - Math.PI / 2;
+        const bx = CX + Math.cos(angle) * (RADIUS + 14);
+        const by = CY + Math.sin(angle) * (RADIUS + 14);
         const isOn = (i + bulbFrame) % 3 !== 0;
-        const col = i%2===0 ? '#FFD700' : '#FF6B35';
+        const col = i % 2 === 0 ? '#FFD700' : '#FF6B35';
         ctx.beginPath();
-        ctx.arc(bx, by, 6, 0, Math.PI*2);
-        if (isOn) {
-          ctx.fillStyle = col;
-          ctx.shadowColor = col;
-          ctx.shadowBlur = 14;
-        } else {
-          ctx.fillStyle = 'rgba(80,80,80,0.4)';
-          ctx.shadowBlur = 0;
-        }
+        ctx.arc(bx, by, 6, 0, Math.PI * 2);
+        if (isOn) { ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 14; }
+        else { ctx.fillStyle = 'rgba(80,80,80,0.4)'; ctx.shadowBlur = 0; }
         ctx.fill();
         ctx.shadowBlur = 0;
       }
 
-      // Outer ring
-      ctx.beginPath(); ctx.arc(CX,CY,RADIUS+2,0,Math.PI*2);
+      ctx.beginPath(); ctx.arc(CX, CY, RADIUS + 2, 0, Math.PI * 2);
       ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 4; ctx.stroke();
-      ctx.beginPath(); ctx.arc(CX,CY,RADIUS-2,0,Math.PI*2);
+      ctx.beginPath(); ctx.arc(CX, CY, RADIUS - 2, 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(255,215,0,0.3)'; ctx.lineWidth = 2; ctx.stroke();
 
-      // Segments
       for (let i = 0; i < TOTAL; i++) {
-        const sa = rotation + i * ARC - Math.PI/2;
+        const sa = rotation + i * ARC - Math.PI / 2;
         const ea = sa + ARC;
         const seg = SEGMENTS[i];
 
-        ctx.beginPath(); ctx.moveTo(CX,CY);
-        ctx.arc(CX,CY,RADIUS,sa,ea); ctx.closePath();
-        const grad = ctx.createRadialGradient(CX,CY,20,CX,CY,RADIUS);
-        grad.addColorStop(0, lighten(seg.color,30));
+        ctx.beginPath(); ctx.moveTo(CX, CY);
+        ctx.arc(CX, CY, RADIUS, sa, ea); ctx.closePath();
+        const grad = ctx.createRadialGradient(CX, CY, 20, CX, CY, RADIUS);
+        grad.addColorStop(0, lighten(seg.color, 30));
         grad.addColorStop(0.5, seg.color);
-        grad.addColorStop(1, darken(seg.color,30));
+        grad.addColorStop(1, darken(seg.color, 30));
         ctx.fillStyle = grad; ctx.fill();
         ctx.strokeStyle = 'rgba(255,215,0,0.6)'; ctx.lineWidth = 2; ctx.stroke();
 
-        // Text
         ctx.save();
-        const ta = sa + ARC/2;
-        ctx.translate(CX,CY); ctx.rotate(ta);
+        const ta = sa + ARC / 2;
+        ctx.translate(CX, CY); ctx.rotate(ta);
         const lines = seg.label.split('\n');
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 13px Arial, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4;
         lines.forEach((line, li) => {
-          const lineY = (li - (lines.length-1)/2) * 16;
-          ctx.fillText(line, RADIUS*0.62, lineY);
+          const lineY = (li - (lines.length - 1) / 2) * 16;
+          ctx.fillText(line, RADIUS * 0.62, lineY);
         });
         ctx.shadowBlur = 0;
         ctx.restore();
       }
 
-      // Center hub
-      const hubG = ctx.createRadialGradient(CX,CY,0,CX,CY,44);
+      const hubG = ctx.createRadialGradient(CX, CY, 0, CX, CY, 44);
       hubG.addColorStop(0, '#FFD700');
       hubG.addColorStop(0.6, '#b8860b');
       hubG.addColorStop(1, '#8b6914');
-      ctx.beginPath(); ctx.arc(CX,CY,44,0,Math.PI*2);
+      ctx.beginPath(); ctx.arc(CX, CY, 44, 0, Math.PI * 2);
       ctx.fillStyle = hubG; ctx.fill();
       ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 3; ctx.stroke();
       ctx.fillStyle = '#1B1B2F';
       ctx.font = 'bold 15px Arial, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('BELLE', CX, CY-9);
-      ctx.fillText('PROS', CX, CY+9);
+      ctx.fillText('BELLE', CX, CY - 9);
+      ctx.fillText('PROS', CX, CY + 9);
 
-      // Pointer
       ctx.beginPath();
       ctx.moveTo(CX, CY - RADIUS - 6);
       ctx.lineTo(CX - 17, CY - RADIUS - 38);
@@ -507,119 +786,338 @@
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
     }
 
-    // ====== CONFETTI (canvas-based — no per-frame DOM churn) ======
+    // ---------- CONFETTI ----------
     const confettiCanvas = document.getElementById('confettiCanvas');
     const confettiCtx = confettiCanvas.getContext('2d');
-
-    function resizeConfettiCanvas() {
-      confettiCanvas.width = window.innerWidth;
-      confettiCanvas.height = window.innerHeight;
-    }
-
+    function resizeConfettiCanvas() { confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight; }
     function spawnConfetti() {
       confettiParts = [];
-      const colors = ['#FFD700','#FF6B35','#E63946','#fff','#6b2fa0','#0a7a7a'];
+      const colors = ['#FFD700', '#FF6B35', '#E63946', '#fff', '#6b2fa0', '#0a7a7a'];
       for (let i = 0; i < CONFETTI_COUNT; i++) {
         confettiParts.push({
           x: Math.random() * window.innerWidth,
           y: -20 - Math.random() * 300,
-          vx: (Math.random()-0.5)*7,
-          vy: Math.random()*4 + 2,
-          size: Math.random()*8 + 4,
-          color: colors[Math.floor(Math.random()*colors.length)],
-          rot: Math.random()*360,
-          vr: (Math.random()-0.5)*12,
+          vx: (Math.random() - 0.5) * 7,
+          vy: Math.random() * 4 + 2,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rot: Math.random() * 360,
+          vr: (Math.random() - 0.5) * 12,
         });
       }
       resizeConfettiCanvas();
     }
-
     function drawConfetti() {
       confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-      confettiParts = confettiParts.map(p => ({
-        ...p, x: p.x+p.vx, y: p.y+p.vy, vy: p.vy+0.15, rot: p.rot+p.vr,
-      })).filter(p => p.y < window.innerHeight + 50);
-
+      confettiParts = confettiParts.map(p => ({ ...p, x: p.x + p.vx, y: p.y + p.vy, vy: p.vy + 0.15, rot: p.rot + p.vr }))
+        .filter(p => p.y < window.innerHeight + 50);
       confettiParts.forEach(p => {
         confettiCtx.save();
         confettiCtx.translate(p.x, p.y);
         confettiCtx.rotate(p.rot * Math.PI / 180);
         confettiCtx.fillStyle = p.color;
-        confettiCtx.fillRect(-p.size/2, -p.size*0.3, p.size, p.size*0.6);
+        confettiCtx.fillRect(-p.size / 2, -p.size * 0.3, p.size, p.size * 0.6);
         confettiCtx.restore();
       });
-
       if (confettiParts.length > 0) requestAnimationFrame(drawConfetti);
     }
+    function clearConfetti() { confettiParts = []; confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height); }
 
-    function clearConfetti() {
-      confettiParts = [];
-      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    // ---------- TOAST ----------
+    let toastTimer = null;
+    function toast(msg) {
+      const mount = document.getElementById('toastMount');
+      mount.innerHTML = `<div class="toast">${escapeHtml(msg)}</div>`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { mount.innerHTML = ''; }, 3200);
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
-    // ====== UI UPDATES ======
-    function renderControls() {
-      const el = document.getElementById('controls');
-      if (phase === 'idle') {
-        el.innerHTML = `<button class="spin-btn" id="spinBtn"><span>TOURNER!</span></button>`;
+    // ---------- SHARE + REVIEW ----------
+    function reviewUrl() {
+      if (state.loc.reviewUrl) return state.loc.reviewUrl;
+      const q = encodeURIComponent(`${state.loc.name} ${state.loc.city}`);
+      return `https://www.google.com/maps/search/?api=1&query=${q}`;
+    }
+    function shareUrl() {
+      const base = location.origin + location.pathname;
+      const p = new URLSearchParams({ loc: state.locCode, utm_source: 'referral', utm_medium: 'share', utm_campaign: CAMPAIGN.id, ref: state.refCode });
+      return `${base}?${p.toString()}`;
+    }
+    function shareText() {
+      const prize = state.currentPlay ? state.currentPlay.prize : 'un prix';
+      return `J'ai gagné ${prize} à la Roue de Fortune ${state.loc.name}! 🎰 Dépense ${CAMPAIGN.spendThreshold}$+ et tourne toi aussi:`;
+    }
+    function grantBonusSpin() {
+      if (!CAMPAIGN.bonusSpinOnShare || state.mode === 'kiosk') return;
+      if (bonusActiveToday()) return;
+      writeJSON(state.store.bonus, { day: todayKey() });
+      track('share_bonus_granted', {});
+      toast('🔥 Tour bonus débloqué! Reviens tourner.');
+    }
+    async function doNativeShare() {
+      track('share_click', { channel: 'native' });
+      const data = { title: state.loc.name, text: shareText(), url: shareUrl() };
+      try {
+        if (navigator.share) { await navigator.share(data); grantBonusSpin(); return; }
+      } catch (e) { return; /* user cancelled */ }
+      try { await navigator.clipboard.writeText(`${shareText()} ${shareUrl()}`); toast('Lien copié! Colle-le dans tes stories 🔥'); grantBonusSpin(); }
+      catch (e) { toast('Copie ce lien: ' + shareUrl()); }
+    }
+    function shareFacebook() {
+      track('share_click', { channel: 'facebook' });
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl())}`, '_blank', 'noopener,width=600,height=520');
+      grantBonusSpin();
+    }
+    function shareSMS() {
+      track('share_click', { channel: 'sms' });
+      window.location.href = `sms:?&body=${encodeURIComponent(shareText() + ' ' + shareUrl())}`;
+      grantBonusSpin();
+    }
+
+    // ---------- LOCATION UI ----------
+    function applyLocation() {
+      const l = state.loc;
+      document.title = `La Roue de Fortune — ${l.name} · ${l.city.split(',')[0]}`;
+      document.getElementById('navName').textContent = l.name;
+      document.getElementById('navCity').textContent = l.city;
+      document.getElementById('heroRule').textContent = `Dépense ${CAMPAIGN.spendThreshold}$+ = 1 tour gratuit!`;
+      document.getElementById('heroBadge').textContent = state.mode === 'kiosk' ? 'BORNE EN MAGASIN' : 'PROMOTION EN MAGASIN';
+      document.getElementById('howStep1').textContent = `Fais une commande de ${CAMPAIGN.spendThreshold}$ ou plus chez ${l.name}.`;
+      document.getElementById('footBrand').textContent = l.name;
+      document.getElementById('footAddr').textContent = `${l.city} · ${l.handle}`;
+      document.getElementById('footSite').textContent = l.site;
+    }
+
+    // ---------- MAIN RENDER ----------
+    function render() {
+      const controls = document.getElementById('controls');
+      const resultArea = document.getElementById('resultArea');
+
+      if (phase === 'spinning') {
+        controls.innerHTML = `<div class="spinning-text">La roue tourne...</div>`;
+        resultArea.innerHTML = '';
+        return;
+      }
+      if (phase === 'reveal' && state.currentPlay) {
+        controls.innerHTML = '';
+        resultArea.innerHTML = revealHtml(state.currentPlay);
+        wireRevealButtons();
+        return;
+      }
+      // idle
+      resultArea.innerHTML = '';
+      if (canSpin()) {
+        const bonus = state.mode !== 'kiosk' && bonusActiveToday() && playsToday().length >= 1;
+        controls.innerHTML = `
+          <button class="spin-btn" id="spinBtn"><span>TOURNER!</span></button>
+          <div class="spin-hint">${bonus ? '🔥 Tour bonus disponible!' : (state.mode === 'kiosk' ? 'Mode borne · un joueur à la fois' : 'Un tour gratuit par visite admissible')}</div>`;
         document.getElementById('spinBtn').addEventListener('click', spin);
-      } else if (phase === 'spinning') {
-        el.innerHTML = `<div class="spinning-text">La roue tourne...</div>`;
       } else {
-        el.innerHTML = '';
+        controls.innerHTML = alreadyPlayedHtml();
+        wireRevealButtons();
       }
     }
 
-    function renderResult() {
-      const el = document.getElementById('resultArea');
-      if (phase !== 'reveal' || !winner) { el.innerHTML = ''; return; }
-      const emoji = winner.value >= 25 ? '🎉🎉🎉' : '🎊';
-      el.innerHTML = `
+    function ctaBlockHtml() {
+      return `
+        <div class="cta-block">
+          <div class="cta-title">🔥 Partage & gagne un tour bonus</div>
+          <div class="cta-sub">Partage la roue avec tes amis${state.mode !== 'kiosk' ? ' pour débloquer un tour de plus aujourd\'hui' : ''}.</div>
+          <div class="share-row">
+            <button class="share-btn share-primary" id="shareNative">Partager</button>
+            <button class="share-btn share-fb" id="shareFb">Facebook</button>
+            <button class="share-btn share-sms" id="shareSms">Texto</button>
+          </div>
+          <a class="cta-review" id="reviewBtn" href="${reviewUrl()}" target="_blank" rel="noopener">⭐ Laisse-nous un avis Google</a>
+        </div>`;
+    }
+
+    function revealHtml(play) {
+      const seg = SEGMENTS.find(s => s.label.replace('\n', ' ') === play.prize) || winner;
+      const big = play.prize_value >= BIG_WIN_VALUE;
+      const emoji = big ? '🎉🎉🎉' : '🎊';
+      return `
         <div class="result-card">
           <div class="result-emoji">${emoji}</div>
           <div class="result-title">FÉLICITATIONS!</div>
-          <div class="result-prize">${winner.label.replace('\n',' ')}</div>
-          <div class="result-desc">${winner.desc}</div>
-          <button class="reset-btn" id="resetBtn">Prochain Joueur →</button>
+          <div class="result-prize">${escapeHtml(play.prize)}</div>
+          <div class="result-desc">${escapeHtml(seg ? seg.desc : '')}</div>
+          <div class="code-box">
+            <div class="code-label">Ton code de réclamation</div>
+            <div class="code-value">${escapeHtml(play.code)}</div>
+            <div class="code-meta">Valide jusqu'au ${formatDateQC(play.expiresAt)}</div>
+          </div>
+          <div class="code-instruct">Montre ce code au comptoir pour réclamer ton prix.</div>
+          ${ctaBlockHtml()}
+          <button class="reset-btn" id="resetBtn">${state.mode === 'kiosk' ? 'Prochain Joueur →' : 'Fermer'}</button>
         </div>`;
-      document.getElementById('resetBtn').addEventListener('click', reset);
     }
 
-    function reset() {
+    function alreadyPlayedHtml() {
+      const play = latestActivePlay();
+      if (!play) {
+        return `
+          <div class="already-card">
+            <div class="result-emoji">🕑</div>
+            <div class="result-title">À DEMAIN!</div>
+            <div class="result-desc">Tu as déjà utilisé ton tour aujourd'hui. Reviens après ta prochaine visite de ${CAMPAIGN.spendThreshold}$+.</div>
+            ${ctaBlockHtml()}
+          </div>`;
+      }
+      return `
+        <div class="already-card">
+          <div class="result-emoji">🎟️</div>
+          <div class="result-title">TON PRIX</div>
+          <div class="result-prize">${escapeHtml(play.prize)}</div>
+          <div class="code-box">
+            <div class="code-label">Ton code de réclamation</div>
+            <div class="code-value">${escapeHtml(play.code)}</div>
+            <div class="code-meta">Valide jusqu'au ${formatDateQC(play.expiresAt)}</div>
+          </div>
+          <div class="code-instruct">Reviens demain pour un nouveau tour après un achat admissible.</div>
+          ${ctaBlockHtml()}
+        </div>`;
+    }
+
+    function wireRevealButtons() {
+      const n = document.getElementById('shareNative'); if (n) n.addEventListener('click', doNativeShare);
+      const f = document.getElementById('shareFb'); if (f) f.addEventListener('click', shareFacebook);
+      const s = document.getElementById('shareSms'); if (s) s.addEventListener('click', shareSMS);
+      const r = document.getElementById('reviewBtn'); if (r) r.addEventListener('click', () => track('review_click', {}));
+      const reset = document.getElementById('resetBtn'); if (reset) reset.addEventListener('click', resetToIdle);
+    }
+
+    function resetToIdle() {
       phase = 'idle';
       winner = null;
+      state.currentPlay = null;
       clearConfetti();
-      renderControls();
-      renderResult();
+      render();
     }
 
-    // ====== SPIN ======
+    // ---------- LEAD FORM ----------
+    function showLeadForm(onDone) {
+      const last = readJSON(state.store.lastLead, {}) || {};
+      const mount = document.getElementById('overlayMount');
+      const skippable = state.mode === 'kiosk';
+      mount.innerHTML = `
+        <div class="overlay" role="dialog" aria-modal="true" aria-label="Débloque ton prix">
+          <div class="lead-card">
+            <div class="lead-emoji">🎁</div>
+            <div class="lead-title">Débloque ton prix!</div>
+            <div class="lead-sub">Entre tes infos pour valider ton prix et recevoir nos prochaines offres.</div>
+            <form id="leadForm" novalidate>
+              <div class="field">
+                <label for="fName">Prénom</label>
+                <input class="input" id="fName" name="name" type="text" autocomplete="given-name" placeholder="Ex. Alex" value="${escapeHtml(last.name || '')}" />
+                <div class="field-error" id="eName"></div>
+              </div>
+              <div class="field">
+                <label for="fPhone">Téléphone</label>
+                <input class="input" id="fPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(450) 000-0000" value="${escapeHtml(last.phone || '')}" />
+                <div class="field-error" id="ePhone"></div>
+              </div>
+              <div class="field">
+                <label for="fEmail">Courriel <span style="opacity:.6">(optionnel)</span></label>
+                <input class="input" id="fEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="toi@courriel.com" value="${escapeHtml(last.email || '')}" />
+                <div class="field-error" id="eEmail"></div>
+              </div>
+              <div class="consent">
+                <input type="checkbox" id="fConsent" ${last.consent ? 'checked' : ''} />
+                <label for="fConsent">J'accepte de recevoir les offres et promotions de ${escapeHtml(state.loc.name)} par SMS et/ou courriel. Je peux me désabonner à tout moment.</label>
+              </div>
+              <button type="submit" class="btn-primary" id="leadSubmit">RÉVÉLER MON PRIX 🎉</button>
+              <div class="privacy-note">Tes infos restent chez ${escapeHtml(state.loc.name)}. On ne les vend jamais.</div>
+              ${skippable ? `<button type="button" class="skip-link" id="leadSkip">Passer (mode borne)</button>` : `<button type="button" class="skip-link" id="leadSkip">Voir mon prix sans laisser mes infos</button>`}
+            </form>
+          </div>
+        </div>`;
+
+      const form = document.getElementById('leadForm');
+      const phoneEl = document.getElementById('fPhone');
+      phoneEl.addEventListener('input', () => {
+        const f = normalizePhone(phoneEl.value);
+        if (f && phoneEl.value.replace(/\D/g, '').length >= 10) phoneEl.value = f;
+      });
+      setTimeout(() => { const nEl = document.getElementById('fName'); if (nEl) nEl.focus(); }, 50);
+
+      form.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        const name = document.getElementById('fName').value.trim();
+        const phoneRaw = document.getElementById('fPhone').value.trim();
+        const emailRaw = document.getElementById('fEmail').value.trim();
+        const consent = document.getElementById('fConsent').checked;
+        let ok = true;
+        setError('eName', 'fName', ''); setError('ePhone', 'fPhone', ''); setError('eEmail', 'fEmail', '');
+
+        if (name.length < 2) { setError('eName', 'fName', 'Entre ton prénom.'); ok = false; }
+        const phone = normalizePhone(phoneRaw);
+        if (!phone) { setError('ePhone', 'fPhone', 'Entre un numéro à 10 chiffres.'); ok = false; }
+        if (emailRaw && !isValidEmail(emailRaw)) { setError('eEmail', 'fEmail', 'Courriel invalide.'); ok = false; }
+        if (!ok) return;
+
+        const lead = {
+          created_at: new Date().toISOString(),
+          location: state.locCode,
+          name: name,
+          phone: phone,
+          email: emailRaw,
+          consent: consent,
+          prize: state.currentPlay ? state.currentPlay.prize : '',
+          code: state.currentPlay ? state.currentPlay.code : '',
+          ref_code: state.refCode,
+          utm_source: state.attribution.utm_source,
+          utm_medium: state.attribution.utm_medium,
+          utm_campaign: state.attribution.utm_campaign,
+          utm_content: state.attribution.utm_content,
+          ref: state.attribution.ref,
+        };
+        saveLead(lead);
+        track('lead_submit', { consent: consent, has_email: !!emailRaw });
+        closeOverlay();
+        onDone();
+      });
+
+      document.getElementById('leadSkip').addEventListener('click', () => {
+        track('lead_skip', {});
+        closeOverlay();
+        onDone();
+      });
+    }
+    function setError(errId, inputId, msg) {
+      const e = document.getElementById(errId); if (e) e.textContent = msg;
+      const i = document.getElementById(inputId); if (i) i.classList.toggle('invalid', !!msg);
+    }
+    function closeOverlay() { document.getElementById('overlayMount').innerHTML = ''; }
+
+    // ---------- SPIN ----------
     function spin() {
       if (phase !== 'idle') return;
-      // Resume audio context on user gesture
+      if (!canSpin()) { render(); return; }
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      getAudio(); // ensure created on user gesture
+      getAudio();
 
+      track('spin_start', { plays_today: playsToday().length });
       phase = 'spinning';
       winner = null;
+      state.currentPlay = null;
       clearConfetti();
-      renderControls();
-      renderResult();
+      render();
 
       const targetIdx = weightedRandom();
-      // Whole revolutions only — a fractional count would shift the landing angle.
-      const fullRot = 5 + Math.floor(Math.random()*3);
+      const fullRot = 5 + Math.floor(Math.random() * 3);
       const segAngle = targetIdx * ARC;
-      const within = Math.random()*ARC*0.6 + ARC*0.2;
-      // Aim relative to the wheel's current offset so the pointer lands on
-      // the announced segment even after previous spins shifted the wheel.
+      const within = Math.random() * ARC * 0.6 + ARC * 0.2;
       const startRot = rotation;
       const currentOffset = ((startRot % TWO_PI) + TWO_PI) % TWO_PI;
       const targetOffset = TWO_PI - segAngle - within;
-      const totalDelta = fullRot*TWO_PI + ((targetOffset - currentOffset + TWO_PI) % TWO_PI);
+      const totalDelta = fullRot * TWO_PI + ((targetOffset - currentOffset + TWO_PI) % TWO_PI);
       const duration = prefersReducedMotion.matches
         ? REDUCED_MOTION_DURATION_MS
-        : SPIN_DURATION_MS + Math.random()*SPIN_DURATION_JITTER_MS;
+        : SPIN_DURATION_MS + Math.random() * SPIN_DURATION_JITTER_MS;
       const startTime = performance.now();
       lastTick = -1;
 
@@ -629,7 +1127,6 @@
         const ease = 1 - Math.pow(1 - t, 3);
         rotation = startRot + totalDelta * ease;
 
-        // Tick
         const norm = ((rotation % TWO_PI) + TWO_PI) % TWO_PI;
         const curSeg = Math.floor(norm / ARC) % TOTAL;
         if (curSeg !== lastTick) { lastTick = curSeg; playTick(); }
@@ -639,44 +1136,147 @@
         if (t < 1) {
           requestAnimationFrame(animate);
         } else {
-          phase = 'reveal';
-          winner = SEGMENTS[targetIdx];
-          const isBig = winner.value >= BIG_WIN_VALUE || winner.label.includes('Upgrade');
-          playWin(isBig);
-          if (navigator.vibrate) navigator.vibrate(isBig ? [100, 50, 200] : 100);
-          if (isBig && !prefersReducedMotion.matches) {
-            setTimeout(() => { spawnConfetti(); drawConfetti(); }, 200);
-          }
-          renderControls();
-          renderResult();
+          onSpinComplete(targetIdx);
         }
       }
       requestAnimationFrame(animate);
     }
 
-    // ====== PRIZE ROWS ======
-    function buildPrizeRows() {
-      const el = document.getElementById('prizeRows');
-      el.innerHTML = SEGMENTS.slice(0, WINNABLE_COUNT).map(s => `
-        <div class="prize-row">
-          <span class="prize-name">${s.label.replace('\n',' ')}</span>
-          <span class="prize-val">~${s.value}$</span>
-          <span class="prize-prob">${Math.round(s.prob*100)}%</span>
-        </div>
-      `).join('');
+    function onSpinComplete(targetIdx) {
+      winner = SEGMENTS[targetIdx];
+      const play = recordPlay(winner);
+      const big = winner.value >= BIG_WIN_VALUE || winner.label.includes('Upgrade');
+      playWin(big);
+      if (navigator.vibrate) navigator.vibrate(big ? [100, 50, 200] : 100);
+      if (big && !prefersReducedMotion.matches) setTimeout(() => { spawnConfetti(); drawConfetti(); }, 200);
+      track('spin_result', { prize: play.prize, value: play.prize_value, code: play.code });
+
+      const revealNow = () => { phase = 'reveal'; render(); };
+      // Ask for contact info once per device; if already captured, go straight to reveal.
+      if (hasLeadOnDevice()) revealNow();
+      else showLeadForm(revealNow);
     }
 
-    // ====== BULB ANIMATION ======
+    // ---------- PRIZE ROWS ----------
+    function buildPrizeRows() {
+      document.getElementById('prizeRows').innerHTML = SEGMENTS.slice(0, WINNABLE_COUNT).map(s => `
+        <div class="prize-row">
+          <span class="prize-name">${escapeHtml(s.label.replace('\n', ' '))}</span>
+          <span class="prize-val">~${s.value}$</span>
+          <span class="prize-prob">${Math.round(s.prob * 100)}%</span>
+        </div>`).join('');
+    }
+
+    // ---------- ADMIN DASHBOARD ----------
+    function csvCell(v) {
+      const s = String(v == null ? '' : v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    }
+    function exportLeadsCSV() {
+      const leads = readJSON(state.store.leads, []);
+      if (!leads.length) { toast('Aucun lead à exporter sur cet appareil.'); return; }
+      const cols = ['created_at', 'location', 'name', 'phone', 'email', 'consent', 'prize', 'code', 'utm_source', 'utm_medium', 'utm_campaign', 'ref', 'ref_code'];
+      const rows = [cols.join(',')].concat(leads.map(l => cols.map(c => csvCell(l[c])).join(',')));
+      const blob = new Blob(['﻿' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `bellepros-${state.locCode}-leads-${todayKey()}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+    function buildAdmin() {
+      if (params.get('admin') !== '1') return;
+      const mount = document.getElementById('adminMount');
+      const locOptions = Object.keys(LOCATIONS).map(k => `<option value="${k}">${escapeHtml(LOCATIONS[k].name)}</option>`).join('');
+      mount.innerHTML = `
+        <div class="admin-panel">
+          <div class="admin-head" id="adminHead"><strong>📊 TABLEAU DE BORD</strong><span id="adminToggle">▾</span></div>
+          <div class="admin-body" id="adminBody">
+            <h4>Statistiques (cet appareil)</h4>
+            <div class="admin-stat"><span>Leads captés</span><b id="statLeads">0</b></div>
+            <div class="admin-stat"><span>Tours joués</span><b id="statPlays">0</b></div>
+            <div class="admin-stat"><span>Leads avec consentement</span><b id="statConsent">0</b></div>
+            <button class="admin-btn gold" id="btnExport">⬇ Exporter les leads (CSV)</button>
+            <button class="admin-btn danger" id="btnClear">Effacer les données locales</button>
+
+            <h4>Générateur de lien campagne</h4>
+            <div class="admin-field"><label>Emplacement</label><select id="genLoc">${locOptions}</select></div>
+            <div class="admin-field"><label>Mode</label><select id="genMode"><option value="customer">Client (QR sur reçu)</option><option value="kiosk">Borne en magasin</option></select></div>
+            <div class="admin-field"><label>Source (utm_source)</label><input id="genSource" placeholder="instagram, facebook, reçu, affiche" /></div>
+            <div class="admin-field"><label>Médium (utm_medium)</label><input id="genMedium" placeholder="social, qr, print" /></div>
+            <div class="admin-field"><label>Campagne (utm_campaign)</label><input id="genCampaign" value="${escapeHtml(CAMPAIGN.id)}" /></div>
+            <div class="admin-url" id="genUrl"></div>
+            <button class="admin-btn orange" id="btnCopyUrl">📋 Copier le lien</button>
+
+            <h4>Probabilités des prix</h4>
+            <div id="adminOdds"></div>
+          </div>
+        </div>`;
+
+      const body = document.getElementById('adminBody');
+      document.getElementById('adminHead').addEventListener('click', () => {
+        const hidden = body.hasAttribute('hidden');
+        if (hidden) body.removeAttribute('hidden'); else body.setAttribute('hidden', '');
+        document.getElementById('adminToggle').textContent = hidden ? '▾' : '▸';
+      });
+
+      const refreshStats = () => {
+        const leads = readJSON(state.store.leads, []);
+        document.getElementById('statLeads').textContent = leads.length;
+        document.getElementById('statPlays').textContent = readJSON(state.store.plays, []).length;
+        document.getElementById('statConsent').textContent = leads.filter(l => l.consent).length;
+      };
+      refreshStats();
+
+      document.getElementById('adminOdds').innerHTML = SEGMENTS.slice(0, WINNABLE_COUNT)
+        .map(s => `<div class="admin-stat"><span>${escapeHtml(s.label.replace('\n', ' '))}</span><b>${Math.round(s.prob * 100)}%</b></div>`).join('');
+
+      const updateUrl = () => {
+        const base = location.origin + location.pathname;
+        const p = new URLSearchParams();
+        p.set('loc', document.getElementById('genLoc').value);
+        if (document.getElementById('genMode').value === 'kiosk') p.set('mode', 'kiosk');
+        const src = document.getElementById('genSource').value.trim();
+        const med = document.getElementById('genMedium').value.trim();
+        const camp = document.getElementById('genCampaign').value.trim();
+        if (src) p.set('utm_source', src);
+        if (med) p.set('utm_medium', med);
+        if (camp) p.set('utm_campaign', camp);
+        document.getElementById('genUrl').textContent = `${base}?${p.toString()}`;
+      };
+      ['genLoc', 'genMode', 'genSource', 'genMedium', 'genCampaign'].forEach(id =>
+        document.getElementById(id).addEventListener('input', updateUrl));
+      document.getElementById('genLoc').value = state.locCode;
+      updateUrl();
+
+      document.getElementById('btnExport').addEventListener('click', exportLeadsCSV);
+      document.getElementById('btnClear').addEventListener('click', () => {
+        if (!confirm('Effacer tous les leads et l\'historique de cet appareil?')) return;
+        [state.store.leads, state.store.plays, state.store.bonus, state.store.lastLead].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+        refreshStats(); render(); toast('Données locales effacées.');
+      });
+      document.getElementById('btnCopyUrl').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(document.getElementById('genUrl').textContent); toast('Lien copié!'); }
+        catch (e) { toast('Sélectionne et copie le lien manuellement.'); }
+      });
+    }
+
+    // ---------- BULB ANIMATION ----------
     if (!prefersReducedMotion.matches) {
       setInterval(() => { bulbFrame++; draw(); }, BULB_INTERVAL_MS);
     }
 
-    // ====== INIT ======
+    // ---------- INIT ----------
+    state.attribution = captureAttribution();
+    state.refCode = myRefCode();
+    applyLocation();
+    track('promo_view', { ref: state.attribution.ref, utm_source: state.attribution.utm_source });
     window.addEventListener('resize', () => { resizeWheelCanvas(); resizeConfettiCanvas(); });
     resizeConfettiCanvas();
     resizeWheelCanvas();
-    renderControls();
     buildPrizeRows();
+    buildAdmin();
+    render();
   </script>
 </body>
 </html>
