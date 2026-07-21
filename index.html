@@ -461,9 +461,20 @@
       bonusSpinOnShare: true,  // sharing unlocks one extra spin (once/day, customer mode)
     };
 
-    // Optional: set to a URL to also POST each captured lead server-side.
-    // Left null so the tool is 100% front-end today; Supabase/webhook is a drop-in.
-    const LEAD_WEBHOOK = null;
+    // Optional central lead backend. Leave type:null for front-end-only (leads stay
+    // in localStorage + CSV export). To collect leads from every location/device into
+    // one place, enable Supabase: run supabase/migrations to create the wheel_leads
+    // table, then fill url + anonKey below (the anon/publishable key is safe to expose —
+    // the table's RLS policy allows INSERT only, never reads). See README.md.
+    const BACKEND = {
+      type: null,            // 'supabase' | 'webhook' | null
+      // --- Supabase (type: 'supabase') ---
+      url: '',               // e.g. https://YOUR-PROJECT.supabase.co
+      anonKey: '',           // your publishable (anon) key
+      table: 'wheel_leads',
+      // --- Generic webhook (type: 'webhook') ---
+      webhookUrl: '',        // POST endpoint that receives the lead JSON
+    };
 
     const NS = 'bellepros';
 
@@ -624,13 +635,29 @@
       arr.push(lead);
       writeJSON(state.store.leads, arr);
       writeJSON(state.store.lastLead, { name: lead.name, phone: lead.phone, email: lead.email, consent: lead.consent });
-      if (LEAD_WEBHOOK) {
-        try {
+      sendLeadToBackend(lead);
+    }
+    // Best-effort push to a central backend; never blocks the UI and never throws.
+    function sendLeadToBackend(lead) {
+      try {
+        if (BACKEND.type === 'supabase' && BACKEND.url && BACKEND.anonKey) {
+          fetch(`${BACKEND.url.replace(/\/$/, '')}/rest/v1/${BACKEND.table}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': BACKEND.anonKey,
+              'Authorization': `Bearer ${BACKEND.anonKey}`,
+              'Prefer': 'return=minimal',
+            },
+            body: JSON.stringify(lead),
+            keepalive: true,
+          }).catch(() => {});
+        } else if (BACKEND.type === 'webhook' && BACKEND.webhookUrl) {
           const body = JSON.stringify(lead);
-          if (navigator.sendBeacon) navigator.sendBeacon(LEAD_WEBHOOK, body);
-          else fetch(LEAD_WEBHOOK, { method: 'POST', body: body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {});
-        } catch (e) {}
-      }
+          if (navigator.sendBeacon) navigator.sendBeacon(BACKEND.webhookUrl, body);
+          else fetch(BACKEND.webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(() => {});
+        }
+      } catch (e) {}
     }
     function hasLeadOnDevice() { return !!readJSON(state.store.lastLead, null); }
 
