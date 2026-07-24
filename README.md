@@ -156,6 +156,13 @@ lead is POSTed as JSON with the same shape as the CSV columns.
   Quebec's *Loi sur les loteries*. Review the footer's legal text and your consent
   wording with a legal advisor before launch.
 
+## Branding
+
+The Restaurant Bellepro's logo is embedded directly in `index.html` as a transparent
+PNG data URI (`LOGO_SRC` near the top of the `<script>`), so the page stays a single
+self-contained file. To swap it, replace that one string with your own
+`data:image/png;base64,…` (or `data:image/svg+xml;base64,…`) value.
+
 ## Files
 
 - `index.html` — the production page (the deployed artifact).
