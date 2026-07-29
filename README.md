@@ -160,8 +160,11 @@ lead is POSTed as JSON with the same shape as the CSV columns.
 
 The Restaurant Bellepro's logo is embedded directly in `index.html` as a transparent
 PNG data URI (`LOGO_SRC` near the top of the `<script>`), so the page stays a single
-self-contained file. To swap it, replace that one string with your own
-`data:image/png;base64,…` (or `data:image/svg+xml;base64,…`) value.
+self-contained file. It appears in three places: the nav bar, the wheel's centre
+medallion (drawn on canvas, on a cream face so the badge keeps its contrast against
+the gold rim), and the footer. To swap it, replace that one string with your own
+`data:image/png;base64,…` (or `data:image/svg+xml;base64,…`) value — all three
+placements update together.
 
 ## Files
 
