@@ -1,0 +1,36 @@
+{
+  "name": "La Roue de Fortune — Restaurant Bellepro's",
+  "short_name": "Roue Bellepro's",
+  "description": "Dépense 50$+ chez Bellepro's et tourne la Roue de Fortune. Tout le monde gagne!",
+  "lang": "fr-CA",
+  "dir": "ltr",
+  "start_url": "./index.html?utm_source=pwa&utm_medium=homescreen",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a1a",
+  "theme_color": "#0a0a1a",
+  "categories": ["food", "entertainment", "lifestyle"],
+  "icons": [
+    {
+      "src": "assets/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-foreground.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}

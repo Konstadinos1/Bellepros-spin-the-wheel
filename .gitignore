@@ -1,2 +1,10 @@
 node_modules/
 package-lock.json
+
+# Capacitor build output and generated native projects.
+# `ios/` and `android/` are regenerated with `npm run add:ios` / `add:android`;
+# commit them only if you need to hand-edit native code or sign builds in CI.
+www/
+ios/
+android/
+.DS_Store

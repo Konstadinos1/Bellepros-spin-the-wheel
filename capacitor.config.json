@@ -1,0 +1,33 @@
+{
+  "appId": "com.bellepros.roue",
+  "appName": "Roue Bellepro's",
+  "webDir": "www",
+  "loggingBehavior": "production",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1400,
+      "launchAutoHide": true,
+      "backgroundColor": "#0a0a1aff",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": false
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#FFD700"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0a0a1a"
+    }
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#0a0a1a"
+  },
+  "android": {
+    "backgroundColor": "#0a0a1a",
+    "allowMixedContent": false
+  }
+}
