@@ -1,5 +1,4 @@
 node_modules/
-package-lock.json
 
 # Capacitor build output and generated native projects.
 # `ios/` and `android/` are regenerated with `npm run add:ios` / `add:android`;

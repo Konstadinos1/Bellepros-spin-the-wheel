@@ -191,6 +191,7 @@ The Restaurant Bellepro's logo appears **everywhere in the game**:
 | Social share preview | `assets/og-image.png` (1200×630) |
 | App icon, home screen | `assets/icon.png` (opaque — iOS rejects alpha) |
 | App splash screen | `assets/splash.png` / `splash-dark.png` |
+| Android notification | `assets/android-notification/` — a **white-on-transparent wheel glyph**, not the badge: Android keeps only the alpha channel, so a colour logo renders as a solid blob |
 
 **To swap the logo:** replace the single `LOGO_SRC` string in `index.html` (every in-page
 placement updates at once), then regenerate the static assets in `assets/`. Keep
