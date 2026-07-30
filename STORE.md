@@ -53,8 +53,16 @@ npm run open:android    # → Android Studio: Build ▸ Generate Signed Bundle (
 After **any** change to `index.html` or `assets/`:
 
 ```bash
-npm run sync            # rebuilds www/ and pushes it into both native projects
+npm run sync            # rebuilds www/, pushes it into both native projects,
+                        # and reinstalls the Android notification icon
 ```
+
+> **Android status-bar icon.** `npm run sync` copies `assets/android-notification/` into
+> `android/…/res/drawable-*/ic_stat_icon.png` (the icon `capacitor.config.json` points at).
+> It is a **white-on-transparent** wheel glyph on purpose: Android discards colour and keeps
+> only the alpha channel, so the full-colour badge would appear as a solid white blob.
+> `@capacitor/assets` does not generate this one, and `android/` is regenerated, which is why
+> it is a build step rather than a committed native file.
 
 `ios/` and `android/` are gitignored — they're generated. Commit them only if you start
 hand-editing native code or signing in CI.

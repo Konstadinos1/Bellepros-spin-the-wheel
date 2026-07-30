@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-www.mjs",
-    "sync": "npm run build && cap sync",
+    "sync": "npm run build && cap sync && node scripts/install-android-notification-icon.mjs",
     "add:ios": "npm run build && cap add ios && cap sync ios",
-    "add:android": "npm run build && cap add android && cap sync android",
+    "add:android": "npm run build && cap add android && cap sync android && node scripts/install-android-notification-icon.mjs",
     "assets": "capacitor-assets generate --iconBackgroundColor '#0a0a1a' --iconBackgroundColorDark '#0a0a1a' --splashBackgroundColor '#0a0a1a' --splashBackgroundColorDark '#0a0a1a'",
     "open:ios": "cap open ios",
     "open:android": "cap open android",
