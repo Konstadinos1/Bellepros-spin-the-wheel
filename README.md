@@ -103,11 +103,46 @@ Paste your Google Analytics / Meta Pixel / Plausible snippet into `<head>`. The 
 `promo_view`, `spin_start`, `spin_result`, `lead_submit`, `lead_skip`,
 `share_click`, `share_bonus_granted`, `review_click`.
 
-## Send leads to a backend (optional)
+## Central lead backend (optional)
 
-By default leads are stored in the browser (`localStorage`) and exported from the
-dashboard as CSV. To also POST each lead server-side (e.g. a Supabase Edge Function),
-set `LEAD_WEBHOOK` to your endpoint URL in `index.html`.
+By default leads live in the browser (`localStorage`) and are exported from the dashboard
+as CSV — fine for a single tablet, but each device holds its own separate list. To collect
+leads from **every location and every device into one place**, point the wheel at a backend
+via the `BACKEND` config near the top of the `<script>` in `index.html`. Leads are still
+saved locally too (belt + suspenders), so a network hiccup never loses a lead.
+
+### Option A — Supabase (recommended)
+
+1. **Create the table.** Run [`supabase/migrations/20260721000000_wheel_leads.sql`](supabase/migrations/20260721000000_wheel_leads.sql)
+   in your project (Supabase SQL editor, or `supabase db push`). It creates a `wheel_leads`
+   table with **insert-only** Row Level Security: the public page can add leads with the
+   anon key, but that key can never read, update, or delete rows.
+2. **Wire the client.** In `index.html`, set:
+   ```js
+   const BACKEND = {
+     type: 'supabase',
+     url: 'https://YOUR-PROJECT.supabase.co',   // Project Settings → Data API → URL
+     anonKey: 'eyJhbGciOi...',                   // the publishable (anon) key
+     table: 'wheel_leads',
+   };
+   ```
+   The anon/publishable key is designed to be public; RLS is what protects the data.
+3. **Read your leads** (service role — SQL editor or Table editor):
+   ```sql
+   select name, phone, email, location, prize, code, consent, inserted_at
+   from public.wheel_leads
+   where consent = true
+   order by inserted_at desc;
+   ```
+
+> Want a hardened setup with no table exposed at all? Put the same insert behind a Supabase
+> **Edge Function** (service-role, server-side, add rate-limiting), and set `type: 'webhook'`
+> with the function URL instead. The client payload is identical.
+
+### Option B — Any webhook
+
+Set `type: 'webhook'` and `webhookUrl` to any endpoint (Zapier, Make, your own API). Each
+lead is POSTed as JSON with the same shape as the CSV columns.
 
 ---
 
@@ -115,10 +150,21 @@ set `LEAD_WEBHOOK` to your endpoint URL in `index.html`.
 
 - **Kiosk tablets accumulate customer contact info in `localStorage`.** Export
   (dashboard → *Exporter les leads*) regularly and use *Effacer les données locales*
-  to clear the device, or configure `LEAD_WEBHOOK` so data lives on your server instead.
+  to clear the device, or configure the `BACKEND` (see below) so data lives on your
+  server instead.
 - The promo is framed as a free bonus on purchase and **is not a lottery** under
   Quebec's *Loi sur les loteries*. Review the footer's legal text and your consent
   wording with a legal advisor before launch.
+
+## Branding
+
+The Restaurant Bellepro's logo is embedded directly in `index.html` as a transparent
+PNG data URI (`LOGO_SRC` near the top of the `<script>`), so the page stays a single
+self-contained file. It appears in three places: the nav bar, the wheel's centre
+medallion (drawn on canvas, on a cream face so the badge keeps its contrast against
+the gold rim), and the footer. To swap it, replace that one string with your own
+`data:image/png;base64,…` (or `data:image/svg+xml;base64,…`) value — all three
+placements update together.
 
 ## Files
 
