@@ -1,15 +1,41 @@
 {
   "name": "bellepros440",
   "version": "1.0.0",
+  "description": "La Roue de Fortune — promotional spin-the-wheel game for Restaurant Bellepro's (Laval, QC). Runs as a website, an in-store kiosk, and an iOS/Android app.",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node scripts/build-www.mjs",
+    "sync": "npm run build && cap sync",
+    "add:ios": "npm run build && cap add ios && cap sync ios",
+    "add:android": "npm run build && cap add android && cap sync android",
+    "assets": "capacitor-assets generate --iconBackgroundColor '#0a0a1a' --iconBackgroundColorDark '#0a0a1a' --splashBackgroundColor '#0a0a1a' --splashBackgroundColorDark '#0a0a1a'",
+    "open:ios": "cap open ios",
+    "open:android": "cap open android",
+    "test": "echo \"No unit tests: the game is verified end-to-end in a browser. See README.\" && exit 0"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "bellepros",
+    "spin-the-wheel",
+    "promotion",
+    "capacitor",
+    "quebec"
+  ],
+  "author": "Bellepros",
   "license": "ISC",
-  "description": "",
   "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/haptics": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/local-notifications": "^7.0.0",
+    "@capacitor/share": "^7.0.0",
+    "@capacitor/splash-screen": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
     "docx": "^9.5.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0"
   }
 }

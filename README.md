@@ -7,6 +7,9 @@ restaurant franchise (Laval, QC). One HTML file (`index.html`) turns an in-store
 Everything runs in the browser — no build step, no server required. Drop `index.html`
 on any static host (Netlify, Vercel, GitHub Pages, an S3 bucket) and it works.
 
+The **same file** also ships as a native iOS/Android app through Capacitor —
+see **[STORE.md](STORE.md)** for the App Store / Google Play guide.
+
 ---
 
 ## What it does
@@ -23,6 +26,25 @@ on any static host (Netlify, Vercel, GitHub Pages, an S3 bucket) and it works.
 - **Attribution + analytics** — captures `utm_*` / `ref` / referrer; `track()` forwards
   events to Google Analytics / Meta Pixel / Plausible if installed (no-op otherwise).
 - **Owner dashboard** — lead/consent/play counts, CSV export, campaign-link builder.
+- **Ships as an app** — native haptics, share sheet, splash screen, and a local
+  notification when the next free spin unlocks (see [STORE.md](STORE.md)).
+
+---
+
+## Run it as an app
+
+```bash
+npm install
+npm run assets        # icons + splash screens from assets/
+npm run add:ios       # macOS + Xcode
+npm run add:android   # Android Studio
+npm run sync          # after any change to index.html or assets/
+```
+
+Full submission guide — store copy, privacy declarations, age rating, and the review
+notes that keep a prize wheel from being mistaken for gambling — is in
+**[STORE.md](STORE.md)**. Both stores require a public privacy policy;
+**[PRIVACY.md](PRIVACY.md)** is a Law 25 / CASL-aware template to fill in and publish.
 
 ---
 
@@ -158,17 +180,37 @@ lead is POSTed as JSON with the same shape as the CSV columns.
 
 ## Branding
 
-The Restaurant Bellepro's logo is embedded directly in `index.html` as a transparent
-PNG data URI (`LOGO_SRC` near the top of the `<script>`), so the page stays a single
-self-contained file. It appears in three places: the nav bar, the wheel's centre
-medallion (drawn on canvas, on a cream face so the badge keeps its contrast against
-the gold rim), and the footer. To swap it, replace that one string with your own
-`data:image/png;base64,…` (or `data:image/svg+xml;base64,…`) value — all three
-placements update together.
+The Restaurant Bellepro's logo appears **everywhere in the game**:
+
+| Placement | Source |
+|---|---|
+| Nav bar, footer | `LOGO_SRC` data URI |
+| Wheel centre medallion | `LOGO_SRC`, drawn on canvas over a cream face so the badge keeps its contrast against the gold rim |
+| Lead-capture form, win card, daily-gate card | `LOGO_SRC` |
+| Browser tab (favicon) | `assets/logo.png` |
+| Social share preview | `assets/og-image.png` (1200×630) |
+| App icon, home screen | `assets/icon.png` (opaque — iOS rejects alpha) |
+| App splash screen | `assets/splash.png` / `splash-dark.png` |
+
+**To swap the logo:** replace the single `LOGO_SRC` string in `index.html` (every in-page
+placement updates at once), then regenerate the static assets in `assets/`. Keep
+`icon.png` opaque and square, or the App Store build will be rejected.
+
+`og:image` must be an **absolute URL** — social scrapers can't resolve relative paths or
+data URIs. It points at `belleproslaval440.com/assets/og-image.png`; update that host if
+you deploy elsewhere, or shared links will preview as a blank card.
 
 ## Files
 
-- `index.html` — the production page (the deployed artifact).
+- `index.html` — the production page (the deployed artifact, and the app's web payload).
+- `assets/` — logo, app icons, splash screens, social share card.
+- `manifest.webmanifest` — PWA manifest (installable site; also the basis for a
+  Play Store TWA build).
+- `capacitor.config.json` + `scripts/build-www.mjs` — native app configuration and the
+  dependency-free `www/` build step.
+- `STORE.md` — App Store / Google Play submission guide.
+- `PRIVACY.md` — privacy policy template (Law 25 / CASL).
+- `supabase/migrations/` — optional central lead table.
 - `wheel.jsx` — a standalone React component of the core wheel, for embedding in a
   Next.js/React app. The full marketing funnel lives in `index.html`.
 - `generate-docx.mjs` — generates the storyboard document.

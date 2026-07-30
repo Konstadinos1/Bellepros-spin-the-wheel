@@ -5,12 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>La Roue de Fortune — Bellepros · Laval</title>
   <meta name="description" content="Dépense 50$+ chez Bellepros et tourne la Roue de Fortune pour gagner des prix! Poutine gratuite, JACKPOT 50$ et plus. Tout le monde gagne!" />
-  <meta property="og:title" content="La Roue de Fortune — Bellepros" />
+  <meta property="og:title" content="La Roue de Fortune — Restaurant Bellepro's" />
   <meta property="og:description" content="Dépense 50$+ = 1 tour gratuit! Tout le monde gagne." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://belleproslaval440.com" />
+  <!-- Absolute URL required: social scrapers can't resolve relative paths or data URIs.
+       Without this, every shared link (the share-to-earn loop) previews as a blank card. -->
+  <meta property="og:image" content="https://belleproslaval440.com/assets/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="fr_CA" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://belleproslaval440.com/assets/og-image.png" />
   <meta name="theme-color" content="#0a0a1a" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎰</text></svg>" />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="apple-touch-icon" href="assets/icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -113,6 +123,11 @@
       margin-bottom: 16px; animation: fadeInUp 0.5s ease-out;
       max-width: 400px; width: 92%;
       box-shadow: 0 0 40px rgba(255,215,0,0.15);
+    }
+    /* Brand mark on every card — the win card is what customers screenshot and share. */
+    .card-logo {
+      height: 38px; width: auto; display: block; margin: 0 auto 10px;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
     }
     .result-emoji { font-size: 48px; margin-bottom: 8px; }
     .result-title { color: #FFD700; font-size: 24px; font-weight: bold; margin-bottom: 6px; letter-spacing: 3px; }
@@ -511,6 +526,7 @@
     const SPIN_DURATION_JITTER_MS = 1500;
     const REDUCED_MOTION_DURATION_MS = 1200;
     const DAY_MS = 86400000;
+    const NEXT_SPIN_NOTIFICATION_ID = 1;
 
     // ---------- APP STATE ----------
     const params = new URLSearchParams(location.search);
@@ -581,6 +597,77 @@
       try { if (typeof window.fbq === 'function') window.fbq('trackCustom', event, payload); } catch (e) {}
       try { if (typeof window.plausible === 'function') window.plausible(event, { props: payload }); } catch (e) {}
     }
+
+    // ---------- NATIVE BRIDGE (Capacitor) ----------
+    // Every call is guarded: in a plain browser the plugins are absent and each
+    // method falls back to the web API (or no-ops), so one codebase serves the
+    // website, the in-store kiosk and the App Store / Play Store builds.
+    const Native = {
+      get available() {
+        return !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function'
+          && window.Capacitor.isNativePlatform());
+      },
+      plugin(name) {
+        return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[name]) || null;
+      },
+      async boot() {
+        if (!this.available) return;
+        document.body.classList.add('is-native');
+        try {
+          const bar = this.plugin('StatusBar');
+          if (bar) { await bar.setStyle({ style: 'DARK' }); await bar.setBackgroundColor({ color: '#0a0a1a' }); }
+        } catch (e) {}
+        try { const s = this.plugin('SplashScreen'); if (s) await s.hide(); } catch (e) {}
+      },
+      // Native haptics feel materially better than navigator.vibrate on iOS,
+      // where the web vibration API isn't supported at all.
+      async celebrate(big) {
+        const h = this.plugin('Haptics');
+        if (h) {
+          try {
+            if (big) { await h.notification({ type: 'SUCCESS' }); }
+            else { await h.impact({ style: 'MEDIUM' }); }
+            return;
+          } catch (e) {}
+        }
+        if (navigator.vibrate) navigator.vibrate(big ? [100, 50, 200] : 100);
+      },
+      async tick() {
+        const h = this.plugin('Haptics');
+        if (h) { try { await h.impact({ style: 'LIGHT' }); } catch (e) {} }
+      },
+      // Returns true when the native sheet handled the share.
+      async share(data) {
+        const s = this.plugin('Share');
+        if (!s) return false;
+        try { await s.share({ title: data.title, text: data.text, url: data.url, dialogTitle: 'Partager' }); return true; }
+        catch (e) { return true; /* dismissed — don't fall through to the web path */ }
+      },
+      // Re-engagement: tell the player when their next free spin unlocks.
+      async remindNextSpin() {
+        if (!this.available) return;
+        const ln = this.plugin('LocalNotifications');
+        if (!ln) return;
+        try {
+          const perm = await ln.checkPermissions();
+          if (perm.display !== 'granted') {
+            const asked = await ln.requestPermissions();
+            if (asked.display !== 'granted') return;
+          }
+          const at = new Date();
+          at.setDate(at.getDate() + 1);
+          at.setHours(11, 0, 0, 0);
+          await ln.schedule({
+            notifications: [{
+              id: NEXT_SPIN_NOTIFICATION_ID,
+              title: 'Ton tour gratuit est prêt! 🎰',
+              body: `Passe chez ${state.loc.name}, dépense ${CAMPAIGN.spendThreshold}$+ et tourne la roue.`,
+              schedule: { at: at },
+            }],
+          });
+        } catch (e) {}
+      },
+    };
 
     // ---------- ATTRIBUTION ----------
     function captureAttribution() {
@@ -923,6 +1010,7 @@
     async function doNativeShare() {
       track('share_click', { channel: 'native' });
       const data = { title: state.loc.name, text: shareText(), url: shareUrl() };
+      if (await Native.share(data)) { grantBonusSpin(); return; }
       try {
         if (navigator.share) { await navigator.share(data); grantBonusSpin(); return; }
       } catch (e) { return; /* user cancelled */ }
@@ -1007,6 +1095,7 @@
       const emoji = big ? '🎉🎉🎉' : '🎊';
       return `
         <div class="result-card">
+          <img class="card-logo" src="${LOGO_SRC}" alt="Restaurant Bellepro's" />
           <div class="result-emoji">${emoji}</div>
           <div class="result-title">FÉLICITATIONS!</div>
           <div class="result-prize">${escapeHtml(play.prize)}</div>
@@ -1027,6 +1116,7 @@
       if (!play) {
         return `
           <div class="already-card">
+            <img class="card-logo" src="${LOGO_SRC}" alt="Restaurant Bellepro's" />
             <div class="result-emoji">🕑</div>
             <div class="result-title">À DEMAIN!</div>
             <div class="result-desc">Tu as déjà utilisé ton tour aujourd'hui. Reviens après ta prochaine visite de ${CAMPAIGN.spendThreshold}$+.</div>
@@ -1035,6 +1125,7 @@
       }
       return `
         <div class="already-card">
+          <img class="card-logo" src="${LOGO_SRC}" alt="Restaurant Bellepro's" />
           <div class="result-emoji">🎟️</div>
           <div class="result-title">TON PRIX</div>
           <div class="result-prize">${escapeHtml(play.prize)}</div>
@@ -1078,6 +1169,7 @@
       mount.innerHTML = `
         <div class="overlay" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
           <div class="lead-card">
+            <img class="card-logo" src="${LOGO_SRC}" alt="Restaurant Bellepro's" />
             <div class="lead-emoji" aria-hidden="true">🎁</div>
             <div class="lead-title" id="leadTitle">Débloque ton prix!</div>
             <div class="lead-sub">Entre tes infos pour valider ton prix et recevoir nos prochaines offres.</div>
@@ -1249,7 +1341,8 @@
       const play = recordPlay(winner);
       const big = winner.value >= BIG_WIN_VALUE || winner.label.includes('Upgrade');
       playWin(big);
-      if (navigator.vibrate) navigator.vibrate(big ? [100, 50, 200] : 100);
+      Native.celebrate(big);
+      if (state.mode !== 'kiosk') Native.remindNextSpin();
       if (big && !prefersReducedMotion.matches) setTimeout(() => { spawnConfetti(); drawConfetti(); }, 200);
       track('spin_result', { prize: play.prize, value: play.prize_value, code: play.code });
 
@@ -1371,6 +1464,7 @@
     // ---------- INIT ----------
     state.attribution = captureAttribution();
     state.refCode = myRefCode();
+    Native.boot();
     applyLocation();
     track('promo_view', { ref: state.attribution.ref, utm_source: state.attribution.utm_source });
     window.addEventListener('resize', () => { resizeWheelCanvas(); resizeConfettiCanvas(); });
